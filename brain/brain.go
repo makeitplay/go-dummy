@@ -7,21 +7,22 @@ import (
 	"math"
 	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/commons/BasicTypes"
+	"github.com/makeitplay/go-dummy/strategy"
 )
 // distance considered "near" for a player to the ball
-const DistanceNearBall = Units.CourtHeight / 2 // units float
+const DistanceNearBall = strategy.RegionWidth // units float
 const ERROR_MARGIN_RUNNING = 20.0
 const ERROR_MARGIN_PASSING = 20.0
 
-
+var TeamState = strategy.Defensive
 type Brain struct {
 	*Game.Player
 	State          PlayerState
 }
 
 func (b *Brain) ResetPosition() {
-	region := b.myRegion()
-	b.Coords = region.InitialPosition()
+	region := b.GetActiveRegion(strategy.Defensive)
+	b.Coords = strategy.GetRegionCenter(region, b.TeamPlace)
 }
 
 func (b *Brain) ProcessAnn(msg Game.GameMessage) {
@@ -30,6 +31,7 @@ func (b *Brain) ProcessAnn(msg Game.GameMessage) {
 	switch GameState.State(msg.State) {
 	case GameState.GETREADY:
 	case GameState.LISTENING:
+		TeamState = strategy.DetermineTeamState(msg, b.TeamPlace)
 		b.State = b.DetermineMyState()
 		commons.LogDebug("State: %s", b.State)
 		b.TakeAnAction()
@@ -51,12 +53,12 @@ func (b *Brain) DetermineMyState() PlayerState {
 		ballPossess = "atk" //attacking
 		subState = "hlp"    //helping
 		if b.LastMsg.GameInfo.Ball.Holder.Id == b.Id {
-			subState = "hld" //holdin
+			subState = "hld" //holding
 		}
 	} else {
-		ballPossess = "dfd"
+		ballPossess = "dfd" //defending
 		subState = "org"
-		if b.isItInMyRegion(b.LastMsg.GameInfo.Ball.Coords) {
+		if b.isItInMyActiveRegion(b.LastMsg.GameInfo.Ball.Coords, strategy.Defensive) {
 			subState = "mrg"
 		}
 	}
@@ -78,40 +80,57 @@ func (b *Brain)  TakeAnAction() {
 	var msg string
 
 	switch b.State {
-	case AtckHoldHse:
-		msg, orders = b.orderForAtckHoldHse()
-	case AtckHoldFrg:
-		msg, orders = b.orderForAtckHoldFrg()
-	case AtckHelpHse:
-		msg, orders = b.orderForAtckHelpHse()
-	case AtckHelpFrg:
-		msg, orders = b.orderForAtckHelpFrg()
-	case DefdMyrgHse:
-		msg, orders = b.orderForDefdMyrgHse()
-		orders = append(orders, b.CreateCatchOrder())
-	case DefdMyrgFrg:
-		msg, orders = b.orderForDefdMyrgFrg()
-		orders = append(orders, b.CreateCatchOrder())
-	case DefdOtrgHse:
-		msg, orders = b.orderForDefdOtrgHse()
-		orders = append(orders, b.CreateCatchOrder())
-	case DefdOtrgFrg:
-		msg, orders = b.orderForDefdOtrgFrg()
-		orders = append(orders, b.CreateCatchOrder())
 	case DsptNfblHse:
 		msg, orders = b.orderForDsptNfblHse()
 		orders = append(orders, b.CreateCatchOrder())
-	case DsptNfblFrg:
-		msg, orders = b.orderForDsptNfblFrg()
-		orders = append(orders, b.CreateCatchOrder())
+	//case DsptNfblFrg:
+	//	msg, orders = b.orderForDsptNfblFrg()
+	//	orders = append(orders, b.CreateCatchOrder())
 	case DsptFrblHse:
 		msg, orders = b.orderForDsptFrblHse()
 		orders = append(orders, b.CreateCatchOrder())
-	case DsptFrblFrg:
-		msg, orders = b.orderForDsptFrblFrg()
-		orders = append(orders, b.CreateCatchOrder())
+	//case DsptFrblFrg:
+	//	msg, orders = b.orderForDsptFrblFrg()
+	//	orders = append(orders, b.CreateCatchOrder())
 	}
+
+
+	//case AtckHoldHse:
+	//	msg, orders = b.orderForAtckHoldHse()
+	//case AtckHoldFrg:
+	//	msg, orders = b.orderForAtckHoldFrg()
+	//case AtckHelpHse:
+	//	msg, orders = b.orderForAtckHelpHse()
+	//case AtckHelpFrg:
+	//	msg, orders = b.orderForAtckHelpFrg()
+	//case DefdMyrgHse:
+	//	msg, orders = b.orderForDefdMyrgHse()
+	//	orders = append(orders, b.CreateCatchOrder())
+	//case DefdMyrgFrg:
+	//	msg, orders = b.orderForDefdMyrgFrg()
+	//	orders = append(orders, b.CreateCatchOrder())
+	//case DefdOtrgHse:
+	//	msg, orders = b.orderForDefdOtrgHse()
+	//	orders = append(orders, b.CreateCatchOrder())
+	//case DefdOtrgFrg:
+	//	msg, orders = b.orderForDefdOtrgFrg()
+	//	orders = append(orders, b.CreateCatchOrder())
+
 	commons.LogDebug("Sending order")
 	b.SendOrders(msg, orders...)
 
+}
+
+func (b *Brain) ShouldIDisputeForTheBall() bool {
+	myDistance := b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords)
+	playerCloser := 0
+	for _, teamMate := range b.GetMyTeam(b.LastMsg.GameInfo).Players {
+		if teamMate.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords) < myDistance {
+			playerCloser++
+			if playerCloser > 2 {
+				return false
+			}
+		}
+	}
+	return true
 }
