@@ -72,13 +72,9 @@ func (b *Brain) orderForDsptFrblHse() (msg string, orders []BasicTypes.Order) {
 	return b.orderForDsptNfblHse()
 }
 
-//func (b *Brain) orderForDsptFrblFrg() (msg string, orders []BasicTypes.Order) {
-//	msg = "Watch out the ball"
-//	backOffDir := Physics.NewVector(b.Coords, b.GetActiveRegionCenter())
-//	backOffDir.Add(Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))
-//	orders = []BasicTypes.Order{b.CreateMoveOrder(backOffDir.TargetFrom(b.Coords))}
-//	return msg, orders
-//}
+func (b *Brain) orderForDsptFrblFrg() (msg string, orders []BasicTypes.Order) {
+	return b.orderForDsptNfblHse()
+}
 //endregion Disputing states
 
 //region Attack states

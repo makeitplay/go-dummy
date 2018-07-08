@@ -85,14 +85,14 @@ func (b *Brain) TakeAnAction() {
 	case DsptNfblHse:
 		msg, orders = b.orderForDsptNfblHse()
 		orders = append(orders, b.CreateCatchOrder())
-		//case DsptNfblFrg:
-		//	msg, orders = b.orderForDsptNfblFrg()
-		//	orders = append(orders, b.CreateCatchOrder())
+	case DsptNfblFrg:
+		msg, orders = b.orderForDsptNfblFrg()
+		orders = append(orders, b.CreateCatchOrder())
 	case DsptFrblHse:
 		msg, orders = b.orderForDsptFrblHse()
 		orders = append(orders, b.CreateCatchOrder())
 	case DsptFrblFrg:
-		msg, orders = b.orderForDsptNfblFrg()
+		msg, orders = b.orderForDsptFrblFrg()
 		orders = append(orders, b.CreateCatchOrder())
 
 	case AtckHoldHse:
