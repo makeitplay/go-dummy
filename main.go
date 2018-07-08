@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"github.com/makeitplay/client-player-go/Game"
 	"github.com/makeitplay/go-dummy/brain"
+	"github.com/makeitplay/commons/Units"
 )
 
 func main() {
@@ -24,11 +25,9 @@ func main() {
 	playerBrain := &brain.Brain{Player: player}
 	playerBrain.TeamPlace = serverConfig.TeamPlace
 	playerBrain.Number = serverConfig.PlayerNumber
+	playerBrain.Size = Units.PlayerSize
 	playerBrain.ResetPosition()
 	playerBrain.Player.OnAnnouncement = playerBrain.ProcessAnn
-
-	commons.LogDebug("--- B %v ", playerBrain.Coords)
-	commons.LogDebug("--- P %v ", player.Coords)
 
 	playerBrain.Start(serverConfig)
 }

@@ -23,7 +23,7 @@ func (b *Brain) isItInMyCurrentRegion(coords Physics.Point, strategyState strate
 	return myRegionCode == regionCode
 }
 
-func (b *Brain) myActiveRegionCenter(strategyState strategy.TeamState) Physics.Point {
+func (b *Brain) GetActiveRegionCenter(strategyState strategy.TeamState) Physics.Point {
 	myRegionCode := b.GetActiveRegion(strategyState)
 	return strategy.GetRegionCenter(myRegionCode,  b.TeamPlace)
 }

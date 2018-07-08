@@ -6,6 +6,8 @@ import (
 	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/commons/Physics"
 	"github.com/makeitplay/client-player-go/Game"
+	"reflect"
+	"github.com/makeitplay/commons"
 )
 
 type PlayerState BasicTypes.State
@@ -54,32 +56,25 @@ func (b *Brain) orderForDsptNfblHse() (msg string, orders []BasicTypes.Order) {
 		orders = []BasicTypes.Order{b.CreateMoveOrder(b.LastMsg.GameInfo.Ball.Coords)}
 		return msg, orders
 	} else {
-
-		return "Holding position for support", []BasicTypes.Order{b.CreateMoveOrder(b.myActiveRegionCenter(TeamState))}
+		if b.myCurrentRegion() != b.GetActiveRegion(TeamState) {
+			return "Moving to my region", []BasicTypes.Order{b.CreateMoveOrder(b.GetActiveRegionCenter(TeamState))}
+		} else {
+			return "Holding position", []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
+		}
 	}
 }
-//
-//func (b *Brain) orderForDsptNfblFrg() (msg string, orders []BasicTypes.Order) {
-//	return b.orderForDsptNfblHse()
-//}
+
+func (b *Brain) orderForDsptNfblFrg() (msg string, orders []BasicTypes.Order) {
+	return b.orderForDsptNfblHse()
+}
 
 func (b *Brain) orderForDsptFrblHse() (msg string, orders []BasicTypes.Order) {
 	return b.orderForDsptNfblHse()
-	//msg = "Try to catch the ball"
-	//
-	//if b.isItInMyActiveRegion(b.LastMsg.GameInfo.Ball.Coords) {
-	//	backOffDir := Physics.NewVector(b.Coords, b.DefenseGoal().Center)
-	//	backOffDir.Add(Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))
-	//	orders = []BasicTypes.Order{b.CreateMoveOrder(backOffDir.TargetFrom(b.Coords))}
-	//} else {
-	//	orders = []BasicTypes.Order{b.CreateMoveOrder(b.myActiveRegionCenter())}
-	//}
-	//return msg, orders
 }
 
 //func (b *Brain) orderForDsptFrblFrg() (msg string, orders []BasicTypes.Order) {
 //	msg = "Watch out the ball"
-//	backOffDir := Physics.NewVector(b.Coords, b.myActiveRegionCenter())
+//	backOffDir := Physics.NewVector(b.Coords, b.GetActiveRegionCenter())
 //	backOffDir.Add(Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))
 //	orders = []BasicTypes.Order{b.CreateMoveOrder(backOffDir.TargetFrom(b.Coords))}
 //	return msg, orders
@@ -88,60 +83,60 @@ func (b *Brain) orderForDsptFrblHse() (msg string, orders []BasicTypes.Order) {
 
 //region Attack states
 
-//func (b *Brain) orderForAtckHoldHse() (msg string, orders []BasicTypes.Order) {
-//	obstacles := watchOpponentOnMyRoute(b.Player, b.OpponentGoal().Center, ERROR_MARGIN_RUNNING)
-//
-//	if len(obstacles) == 0 {
-//		return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
-//	} else if len(obstacles) == 1 {
-//		num := int(reflect.ValueOf(obstacles).MapKeys()[0].Int())
-//		if b.calcDistanceScale(b.GetOpponentTeam(b.LastMsg.GameInfo).Players[num].Coords) != DISTANCE_SCALE_FAR {
-//			return "Dribble this guys (not yet)", []BasicTypes.Order{b.orderPassTheBall()}
-//		} else {
-//			return "Advance watching", []BasicTypes.Order{b.orderAdvance()}
-//		}
-//	} else {
-//		nearstObstacle := float64(Units.CourtWidth) //just initializing with a high value
-//		//num := int(reflect.ValueOf(obstacles).MapKeys()[0].Int())
-//		for opponentId := range obstacles {
-//			oppCoord := b.GetOpponentTeam(b.LastMsg.GameInfo).Players[opponentId].Coords
-//			oppDist := b.Coords.DistanceTo(oppCoord)
-//			if oppDist < nearstObstacle {
-//				nearstObstacle = oppDist
-//			}
-//		}
-//		if nearstObstacle < Units.PlayerMaxSpeed*2 {
-//			return "I need help", []BasicTypes.Order{b.orderPassTheBall(), b.orderAdvance()}
-//		} else {
-//			return "Advance watching", []BasicTypes.Order{b.orderAdvance()}
-//		}
-//	}
-//}
-//
-//func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
-//	goalCoords := b.OpponentGoal().Center
-//	goalDistance := b.Coords.DistanceTo(goalCoords)
-//	if int(math.Abs(goalDistance)) < BallMaxDistance() {
-//		return "Shoot!", []BasicTypes.Order{b.CreateKickOrder(goalCoords)}
-//	} else {
-//		obstacles := watchOpponentOnMyRoute(b.Player, b.OpponentGoal().Center, ERROR_MARGIN_RUNNING)
-//
-//		if len(obstacles) == 0 {
-//			return "I am still free", []BasicTypes.Order{b.orderAdvance()}
-//		} else if len(obstacles) == 1 {
-//			num := int(reflect.ValueOf(obstacles).MapKeys()[0].Int())
-//			if b.calcDistanceScale(b.GetOpponentTeam(b.LastMsg.GameInfo).Players[num].Coords) != DISTANCE_SCALE_FAR {
-//				return "Dribble this guys (not yet)", []BasicTypes.Order{b.orderPassTheBall()}
-//			} else {
-//				return "Advace watching", []BasicTypes.Order{b.orderAdvance()}
-//			}
-//		} else {
-//			return "I need help", []BasicTypes.Order{b.orderPassTheBall(), b.orderAdvance()}
-//		}
-//
-//	}
-//}
-//
+func (b *Brain) orderForAtckHoldHse() (msg string, orders []BasicTypes.Order) {
+	obstacles := watchOpponentOnMyRoute(b.Player, b.OpponentGoal().Center)
+
+	if len(obstacles) == 0 {
+		return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
+	} else if len(obstacles) == 1 {
+		num := int(reflect.ValueOf(obstacles).MapKeys()[0].Int())
+		if b.calcDistanceScale(b.GetOpponentTeam(b.LastMsg.GameInfo).Players[num].Coords) != DISTANCE_SCALE_FAR {
+			return "Dribble this guys (not yet)", b.orderPassTheBall()
+		} else {
+			return "Advance watching", []BasicTypes.Order{b.orderAdvance()}
+		}
+	} else {
+		nearstObstacle := float64(Units.CourtWidth) //just initializing with a high value
+		//num := int(reflect.ValueOf(obstacles).MapKeys()[0].Int())
+		for opponentId := range obstacles {
+			oppCoord := b.GetOpponentTeam(b.LastMsg.GameInfo).Players[opponentId].Coords
+			oppDist := b.Coords.DistanceTo(oppCoord)
+			if oppDist < nearstObstacle {
+				nearstObstacle = oppDist
+			}
+		}
+		if nearstObstacle < Units.PlayerMaxSpeed*2 {
+			return "I need help guys!", b.orderPassTheBall()
+		} else {
+			return "Advance watching", []BasicTypes.Order{b.orderAdvance()}
+		}
+	}
+}
+
+func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
+	goalCoords := b.OpponentGoal().Center
+	goalDistance := b.Coords.DistanceTo(goalCoords)
+	if math.Abs(goalDistance) < BallMaxSafePassDistance(Units.BallMaxSpeed) {
+		return "Shoot!", []BasicTypes.Order{b.CreateKickOrder(goalCoords, Units.BallMaxSpeed)}
+	} else {
+		obstacles := watchOpponentOnMyRoute(b.Player, b.OpponentGoal().Center)
+
+		if len(obstacles) == 0 {
+			return "I am still free", []BasicTypes.Order{b.orderAdvance()}
+		} else if len(obstacles) == 1 {
+			num := int(reflect.ValueOf(obstacles).MapKeys()[0].Int())
+			if b.calcDistanceScale(b.GetOpponentTeam(b.LastMsg.GameInfo).Players[num].Coords) != DISTANCE_SCALE_FAR {
+				return "Dribble this guys (not yet)", b.orderPassTheBall()
+			} else {
+				return "Advace watching", []BasicTypes.Order{b.orderAdvance()}
+			}
+		} else {
+			return "I need help", b.orderPassTheBall()
+		}
+
+	}
+}
+
 //func (b *Brain) orderForAtckHelpHse() (msg string, orders []BasicTypes.Order) {
 //	if b.isItInMyActiveRegion(b.Coords) {
 //		switch b.calcDistanceScale(b.LastMsg.GameInfo.Ball.Coords) {
@@ -160,7 +155,7 @@ func (b *Brain) orderForDsptFrblHse() (msg string, orders []BasicTypes.Order) {
 //		}
 //	} else {
 //		msg = "I'll be right here"
-//		myRegionVector := Physics.NewVector(b.Coords, b.myActiveRegionCenter()).Invert().TargetFrom(b.Coords)
+//		myRegionVector := Physics.NewVector(b.Coords, b.GetActiveRegionCenter()).Invert().TargetFrom(b.Coords)
 //		offensivePosition := Physics.NewVector(b.Coords, b.OpponentGoal().Center)
 //		offensivePosition.Add(Physics.NewVector(b.Coords, myRegionVector))
 //		orders = []BasicTypes.Order{b.CreateMoveOrder(offensivePosition.TargetFrom(b.Coords))}
@@ -177,7 +172,7 @@ func (b *Brain) orderForDsptFrblHse() (msg string, orders []BasicTypes.Order) {
 //		case DISTANCE_SCALE_NEAR:
 //			msg = "Helping on attack"
 //
-//			offensiveZone := Physics.NewVector(b.Coords, b.myActiveRegionCenter())
+//			offensiveZone := Physics.NewVector(b.Coords, b.GetActiveRegionCenter())
 //			offensiveZone.Add(Physics.NewVector(b.Coords, b.OpponentGoal().Center))
 //			orders = []BasicTypes.Order{b.CreateMoveOrder(offensiveZone.TargetFrom(b.Coords))}
 //		case DISTANCE_SCALE_GOOD:
@@ -187,7 +182,7 @@ func (b *Brain) orderForDsptFrblHse() (msg string, orders []BasicTypes.Order) {
 //			orders = []BasicTypes.Order{b.CreateMoveOrder(offensiveZone.TargetFrom(b.Coords))}
 //		}
 //	} else {
-//		regionCenter := b.myActiveRegionCenter()
+//		regionCenter := b.GetActiveRegionCenter()
 //		return "Backing to my position", []BasicTypes.Order{b.CreateMoveOrder(regionCenter)}
 //	}
 //	return msg, orders
@@ -232,7 +227,7 @@ func (b *Brain) orderForDsptFrblHse() (msg string, orders []BasicTypes.Order) {
 //	} else {
 //		msg = "Back off!"
 //		backOffDir := Physics.NewVector(b.Coords, b.DefenseGoal().Center)
-//		backOffDir.Add(Physics.NewVector(b.Coords, b.myActiveRegionCenter()))
+//		backOffDir.Add(Physics.NewVector(b.Coords, b.GetActiveRegionCenter()))
 //		orders = []BasicTypes.Order{b.CreateMoveOrder(backOffDir.TargetFrom(b.Coords))}
 //	}
 //	//nothing more smart than that so far. stay stopped
@@ -248,7 +243,7 @@ func (b *Brain) orderForDsptFrblHse() (msg string, orders []BasicTypes.Order) {
 //	} else {
 //		msg = "Back off!"
 //		backOffDir := Physics.NewVector(b.Coords, b.DefenseGoal().Center)
-//		backOffDir.Add(Physics.NewVector(b.Coords, b.myActiveRegionCenter()))
+//		backOffDir.Add(Physics.NewVector(b.Coords, b.GetActiveRegionCenter()))
 //		orders = []BasicTypes.Order{b.CreateMoveOrder(backOffDir.TargetFrom(b.Coords))}
 //	}
 //	//nothing more smart than that so far. stay stopped
@@ -263,23 +258,52 @@ func (b *Brain) orderAdvance() BasicTypes.Order {
 	return b.CreateMoveOrder(b.OpponentGoal().Center)
 }
 
-func (b *Brain) orderPassTheBall() BasicTypes.Order {
+func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 	bestCandidate := new(Game.Player)
 	bestScore := 0
 	for _, playerMate := range b.GetMyTeam(b.LastMsg.GameInfo).Players {
 		if playerMate.Id == b.Id {
 			continue
 		}
-		obstaclesFromMe := watchOpponentOnMyRoute(b.Player, playerMate.Coords, ERROR_MARGIN_PASSING)
-		obstaclesToGoal := watchOpponentOnMyRoute(playerMate, b.OpponentGoal().Center, ERROR_MARGIN_RUNNING)
+		commons.LogWarning("Evaluating %s", playerMate.Number)
+
+
+		obstaclesFromMe := watchOpponentOnMyRoute(b.Player, playerMate.Coords)
+		obstaclesToGoal := watchOpponentOnMyRoute(playerMate, b.OpponentGoal().Center)
 		distanceFromMe := b.Coords.DistanceTo(playerMate.Coords)
 		distanceToGoal := playerMate.Coords.DistanceTo(b.OpponentGoal().Center)
-		score := 1000
-		score -= len(obstaclesFromMe) * 10
-		score -= len(obstaclesToGoal) * 5
-		score -= int(distanceFromMe * 0.5)
-		score -= int(distanceToGoal * 0.5)
 
+		commons.LogDebug("distanceFromMe %f", distanceFromMe)
+		commons.LogDebug("distanceToGoal %f", distanceToGoal)
+
+		score := 0
+		score -= len(obstaclesFromMe) * 10
+		commons.LogDebug("obstaclesFromMe %d", len(obstaclesFromMe) )
+		if len(obstaclesToGoal) == 0 {
+			commons.LogDebug("obstaclesToGoal %d", len(obstaclesToGoal))
+			score += 40
+		} else if obstaclesToGoal[0] > 3.0 * Units.PlayerMaxSpeed {
+			commons.LogDebug("obstaclesToGoal are further than 3 frames")
+			score += 30
+		} else if obstaclesToGoal[0] > 1.0 * Units.PlayerMaxSpeed {
+			commons.LogDebug("obstaclesToGoal are further than 1 frame")
+			score += 10
+		}
+
+		if distanceFromMe <= Units.BallMaxSpeed / 2 {
+			commons.LogDebug("too close")
+			score -= 5
+		} else if distanceFromMe > Units.BallMaxSpeed {
+			commons.LogDebug("too far")
+			score -= 10
+		}else {
+			commons.LogDebug("great distance")
+			score += 20
+		}
+		if distanceToGoal < Units.BallMaxSpeed {
+			commons.LogDebug("awesome location")
+			score += 20
+		}
 		//App.Log("=Player %s | %d obs, %d obs2, %d DfomMe, %d DfomGoal  = Total %d",
 		//	playerMate.Number,
 		//	len(obstaclesFromMe),
@@ -288,24 +312,49 @@ func (b *Brain) orderPassTheBall() BasicTypes.Order {
 		//	int(distanceToGoal),
 		//	score,
 		//	)
-
+		commons.LogWarning("score candidate %v\n\n------------", score)
 		if score > bestScore {
 			bestScore = score
 			bestCandidate = playerMate
 		}
 	}
+	commons.LogWarning("Best candidate %s", bestCandidate.Number)
+	bastSpeed := b.BestSpeedToTarget(bestCandidate.Coords)
 
-	//App.Log("\n=Best candidate %d ", bestCandidate.Number)
-	return b.CreateKickOrder(bestCandidate.Coords)
+	return []BasicTypes.Order{
+		b.CreateStopOrder(*Physics.NewVector(b.LastMsg.GameInfo.Ball.Coords, bestCandidate.Coords).Normalize()),
+		b.CreateKickOrder(bestCandidate.Coords, bastSpeed),
+	}
+}
+
+func (b *Brain) BestSpeedToTarget(target Physics.Point) float64 {
+	s := b.LastMsg.GameInfo.Ball.Coords.DistanceTo(target)
+	v := Units.BallMaxSpeed
+	a := float64(-Units.BallDeceleration)
+	//(a/2)t^2 + vt - s
+
+	// delta: b^2 -4.a.c
+	delta := math.Pow(v, 2) - 4 * -s * a
+
+	// quadratic formula: -b +/- sqrt(delta)/2a
+	t1 := (- v + math.Sqrt(delta)) / a
+	if math.IsNaN(t1) {// target too far
+		return Units.BallMaxSpeed
+	}
+
+	//t2 := (- v - math.Sqrt(delta)) / a
+
+	t := math.Ceil(t1)
+
+	return (s - (a/2)*math.Pow(t,2)) / t
 }
 
 // calc a distance scale where the player could target
 func (b *Brain) calcDistanceScale(target Physics.Point) DistanceScale {
 	distance := math.Abs(b.Coords.DistanceTo(target))
 	// try to be closer the player
-	fieldDiagonal := math.Hypot(float64(Units.CourtHeight), float64(Units.CourtWidth))
-	toFar := fieldDiagonal / 3
-	toNear := fieldDiagonal / 5
+	toFar := Units.PlayerMaxSpeed * 4
+	toNear :=Units.PlayerMaxSpeed * 2
 
 	if distance >= toFar {
 		return DISTANCE_SCALE_FAR
@@ -316,16 +365,5 @@ func (b *Brain) calcDistanceScale(target Physics.Point) DistanceScale {
 	}
 }
 
-// Opponent id and angle between it and the target
-func watchOpponentOnMyRoute(player *Game.Player, target Physics.Point, errMarginDegree float64) map[int]float64 {
-	opponentTeam := player.GetOpponentTeam(player.LastMsg.GameInfo)
-	opponents := make(map[int]float64)
-	for _, opponent := range opponentTeam.Players {
-		angle, isObstacle := player.IsObstacle(target, opponent.Coords, errMarginDegree)
-		if isObstacle {
-			opponents[opponent.Id] = angle
-		}
-	}
-	return opponents
-}
+
 //endregion
