@@ -261,7 +261,7 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 		if playerMate.Id == b.Id {
 			continue
 		}
-		commons.LogWarning("Evaluating %s", playerMate.Number)
+		//commons.LogWarning("Evaluating %s", playerMate.Number)
 
 
 		obstaclesFromMe := watchOpponentOnMyRoute(b.Player, playerMate.Coords)
@@ -269,35 +269,35 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 		distanceFromMe := b.Coords.DistanceTo(playerMate.Coords)
 		distanceToGoal := playerMate.Coords.DistanceTo(b.OpponentGoal().Center)
 
-		commons.LogDebug("distanceFromMe %f", distanceFromMe)
-		commons.LogDebug("distanceToGoal %f", distanceToGoal)
+		//commons.LogDebug("distanceFromMe %f", distanceFromMe)
+		//commons.LogDebug("distanceToGoal %f", distanceToGoal)
 
 		score := 0
 		score -= len(obstaclesFromMe) * 10
-		commons.LogDebug("obstaclesFromMe %d", len(obstaclesFromMe) )
+		//commons.LogDebug("obstaclesFromMe %d", len(obstaclesFromMe) )
 		if len(obstaclesToGoal) == 0 {
-			commons.LogDebug("obstaclesToGoal %d", len(obstaclesToGoal))
+			//commons.LogDebug("obstaclesToGoal %d", len(obstaclesToGoal))
 			score += 40
 		} else if obstaclesToGoal[0] > 3.0 * Units.PlayerMaxSpeed {
-			commons.LogDebug("obstaclesToGoal are further than 3 frames")
+			//commons.LogDebug("obstaclesToGoal are further than 3 frames")
 			score += 30
 		} else if obstaclesToGoal[0] > 1.0 * Units.PlayerMaxSpeed {
-			commons.LogDebug("obstaclesToGoal are further than 1 frame")
+			//commons.LogDebug("obstaclesToGoal are further than 1 frame")
 			score += 10
 		}
 
 		if distanceFromMe <= Units.BallMaxSpeed / 2 {
-			commons.LogDebug("too close")
+			//commons.LogDebug("too close")
 			score -= 5
 		} else if distanceFromMe > Units.BallMaxSpeed {
-			commons.LogDebug("too far")
+			//commons.LogDebug("too far")
 			score -= 10
 		}else {
-			commons.LogDebug("great distance")
+			//commons.LogDebug("great distance")
 			score += 20
 		}
 		if distanceToGoal < Units.BallMaxSpeed {
-			commons.LogDebug("awesome location")
+			//commons.LogDebug("awesome location")
 			score += 20
 		}
 		//App.Log("=Player %s | %d obs, %d obs2, %d DfomMe, %d DfomGoal  = Total %d",
@@ -308,13 +308,13 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 		//	int(distanceToGoal),
 		//	score,
 		//	)
-		commons.LogWarning("score candidate %v\n\n------------", score)
+		//commons.LogWarning("score candidate %v\n\n------------", score)
 		if score > bestScore {
 			bestScore = score
 			bestCandidate = playerMate
 		}
 	}
-	commons.LogWarning("Best candidate %s", bestCandidate.Number)
+	//commons.LogWarning("Best candidate %s", bestCandidate.Number)
 	bastSpeed := b.BestSpeedToTarget(bestCandidate.Coords)
 
 	return []BasicTypes.Order{
