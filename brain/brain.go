@@ -54,7 +54,7 @@ func (b *Brain) DetermineMyState() PlayerState {
 	} else if b.LastMsg.GameInfo.Ball.Holder.TeamPlace == b.TeamPlace {
 		ballPossess = "atk" //attacking
 		subState = "hlp"    //helping
-		if b.LastMsg.GameInfo.Ball.Holder.Id == b.Id {
+		if b.LastMsg.GameInfo.Ball.Holder.ID() == b.ID() {
 			subState = "hld" //holding
 		}
 	} else {
@@ -129,10 +129,10 @@ func (b *Brain) TakeAnAction() {
 func (b *Brain) ShouldIDisputeForTheBall() bool {
 	myDistance := b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords)
 	playerCloser := 0
-	for _, teamMate := range b.GetMyTeam(b.LastMsg.GameInfo).Players {
+	for _, teamMate := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
 		if teamMate.Number != b.Number && teamMate.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords) < myDistance {
 			playerCloser++
-			if playerCloser > 1 {
+			if playerCloser > 1 {// are there more than on player closer to the ball than me?
 				return false
 			}
 		}

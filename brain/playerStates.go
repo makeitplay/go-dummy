@@ -7,7 +7,6 @@ import (
 	"github.com/makeitplay/commons/Physics"
 	"github.com/makeitplay/client-player-go/Game"
 	"reflect"
-	"github.com/makeitplay/commons"
 )
 
 type PlayerState BasicTypes.State
@@ -85,8 +84,8 @@ func (b *Brain) orderForAtckHoldHse() (msg string, orders []BasicTypes.Order) {
 	if len(obstacles) == 0 {
 		return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
 	} else if len(obstacles) == 1 {
-		num := int(reflect.ValueOf(obstacles).MapKeys()[0].Int())
-		if b.calcDistanceScale(b.GetOpponentTeam(b.LastMsg.GameInfo).Players[num].Coords) != DISTANCE_SCALE_FAR {
+		num := reflect.ValueOf(obstacles).MapKeys()[0].String()
+		if b.calcDistanceScale(b.GetOpponentPlayer(b.LastMsg.GameInfo, num).Coords) != DISTANCE_SCALE_FAR {
 			return "Dribble this guys (not yet)", b.orderPassTheBall()
 		} else {
 			return "Advance watching", []BasicTypes.Order{b.orderAdvance()}
@@ -95,7 +94,7 @@ func (b *Brain) orderForAtckHoldHse() (msg string, orders []BasicTypes.Order) {
 		nearstObstacle := float64(Units.CourtWidth) //just initializing with a high value
 		//num := int(reflect.ValueOf(obstacles).MapKeys()[0].Int())
 		for opponentId := range obstacles {
-			oppCoord := b.GetOpponentTeam(b.LastMsg.GameInfo).Players[opponentId].Coords
+			oppCoord := b.GetOpponentPlayer(b.LastMsg.GameInfo, opponentId).Coords
 			oppDist := b.Coords.DistanceTo(oppCoord)
 			if oppDist < nearstObstacle {
 				nearstObstacle = oppDist
@@ -120,8 +119,8 @@ func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
 		if len(obstacles) == 0 {
 			return "I am still free", []BasicTypes.Order{b.orderAdvance()}
 		} else if len(obstacles) == 1 {
-			num := int(reflect.ValueOf(obstacles).MapKeys()[0].Int())
-			if b.calcDistanceScale(b.GetOpponentTeam(b.LastMsg.GameInfo).Players[num].Coords) != DISTANCE_SCALE_FAR {
+			num := reflect.ValueOf(obstacles).MapKeys()[0].String()
+			if b.calcDistanceScale(b.GetOpponentPlayer(b.LastMsg.GameInfo, num).Coords) != DISTANCE_SCALE_FAR {
 				return "Dribble this guys (not yet)", b.orderPassTheBall()
 			} else {
 				return "Advace watching", []BasicTypes.Order{b.orderAdvance()}
@@ -257,8 +256,8 @@ func (b *Brain) orderAdvance() BasicTypes.Order {
 func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 	bestCandidate := new(Game.Player)
 	bestScore := 0
-	for _, playerMate := range b.GetMyTeam(b.LastMsg.GameInfo).Players {
-		if playerMate.Id == b.Id {
+	for _, playerMate := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
+		if playerMate.ID() == b.ID() {
 			continue
 		}
 		//commons.LogWarning("Evaluating %s", playerMate.Number)

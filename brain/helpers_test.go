@@ -6,6 +6,7 @@ import (
 	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/client-player-go/Game"
 	"github.com/stretchr/testify/assert"
+	"github.com/makeitplay/commons/BasicTypes"
 )
 
 func TestBrain_watchOpponentOnMyRoute(t *testing.T) {
@@ -17,35 +18,35 @@ func TestBrain_watchOpponentOnMyRoute(t *testing.T) {
 
 	A := Brain{}
 	A.Player = new(Game.Player)
+	A.Number = BasicTypes.PlayerNumber("1")
 	A.TeamPlace = Units.HomeTeam
-	A.Id = 1
 	A.Size = Units.PlayerSize
 
 	B := Brain{}
 	B.Player = new(Game.Player)
-	A.Id = 2
-	B.Size = Units.PlayerSize
+	B.Number = BasicTypes.PlayerNumber("1")
 	B.TeamPlace = Units.AwayTeam
+	B.Size = Units.PlayerSize
 
 	C := Brain{}
 	C.Player = new(Game.Player)
-	C.Size = Units.PlayerSize
+	C.Number = BasicTypes.PlayerNumber("2")
 	C.TeamPlace = Units.AwayTeam
-	C.Id = 5
+	C.Size = Units.PlayerSize
 
 	D := Brain{}
 	D.Player = new(Game.Player)
+	D.Number = BasicTypes.PlayerNumber("3")
 	D.TeamPlace = Units.AwayTeam
-	D.Id = 4
 	D.Size = Units.PlayerSize
 
-	msg.GameInfo.HomeTeam.Players = map[int]*Game.Player{}
-	msg.GameInfo.AwayTeam.Players = map[int]*Game.Player{}
+	msg.GameInfo.HomeTeam.Players = []*Game.Player{}
+	msg.GameInfo.AwayTeam.Players = []*Game.Player{}
 
-	msg.GameInfo.HomeTeam.Players[0] = A.Player
-	msg.GameInfo.AwayTeam.Players[0] = B.Player
-	msg.GameInfo.AwayTeam.Players[1] = C.Player
-	msg.GameInfo.AwayTeam.Players[2] = D.Player
+	msg.GameInfo.HomeTeam.Players = append(msg.GameInfo.HomeTeam.Players, A.Player)
+	msg.GameInfo.AwayTeam.Players = append(msg.GameInfo.AwayTeam.Players, B.Player)
+	msg.GameInfo.AwayTeam.Players = append(msg.GameInfo.AwayTeam.Players, C.Player)
+	msg.GameInfo.AwayTeam.Players = append(msg.GameInfo.AwayTeam.Players, D.Player)
 	A.LastMsg = msg
 
 	A.Coords = strategy.GetRegionCenter(strategy.RegionCode{1,1}, Units.HomeTeam)

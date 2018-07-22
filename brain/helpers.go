@@ -12,15 +12,15 @@ func BallMaxSafePassDistance(Speed float64) float64 {
 }
 
 // Opponent id and angle between it and the target
-func watchOpponentOnMyRoute(player *Game.Player, target Physics.Point) map[int]float64 {
+func watchOpponentOnMyRoute(player *Game.Player, target Physics.Point) map[string]float64 {
 	opponentTeam := player.GetOpponentTeam(player.LastMsg.GameInfo)
-	opponents := make(map[int]float64)
+	opponents := make(map[string]float64)
 	vectorExpected := Physics.NewVector(player.Coords, target)
 	for _, opponent := range opponentTeam.Players {
 		collisionPoint := opponent.VectorCollides(*vectorExpected, player.Coords, float64(player.Size))
 
 		if collisionPoint != nil {
-			opponents[opponent.Id] = collisionPoint.DistanceTo(player.Coords)
+			opponents[opponent.ID()] = collisionPoint.DistanceTo(player.Coords)
 		}
 	}
 	return opponents

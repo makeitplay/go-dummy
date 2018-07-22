@@ -33,10 +33,10 @@ func TestBrain_ShouldIDisputeForTheBall(t *testing.T) {
 	ronaldo.Number = "ronaldo"
 	ronaldo.Coords = strategy.GetRegionCenter(strategy.RegionCode{2,0}, Units.HomeTeam)
 
-	msg.GameInfo.HomeTeam.Players = map[int]*Game.Player{}
-	msg.GameInfo.HomeTeam.Players[0] = aldair.Player
-	msg.GameInfo.HomeTeam.Players[1] = bebeto.Player
-	msg.GameInfo.HomeTeam.Players[2] = ronaldo.Player
+	msg.GameInfo.HomeTeam.Players = []*Game.Player{}
+	msg.GameInfo.HomeTeam.Players = append(msg.GameInfo.HomeTeam.Players, aldair.Player)
+	msg.GameInfo.HomeTeam.Players = append(msg.GameInfo.HomeTeam.Players, bebeto.Player)
+	msg.GameInfo.HomeTeam.Players = append(msg.GameInfo.HomeTeam.Players, ronaldo.Player)
 	aldair.LastMsg = msg
 	assert.True(t, aldair.ShouldIDisputeForTheBall())
 
@@ -50,9 +50,11 @@ func TestBrain_ShouldIDisputeForTheBall(t *testing.T) {
 	ronaldo.Coords = strategy.GetRegionCenter(strategy.RegionCode{1,0}, Units.HomeTeam)
 	assert.False(t, aldair.ShouldIDisputeForTheBall())
 
-	delete(msg.GameInfo.HomeTeam.Players, 2)
-	msg.GameInfo.AwayTeam.Players = map[int]*Game.Player{}
-	msg.GameInfo.AwayTeam.Players[0] =  ronaldo.Player
-
+	msg.GameInfo.HomeTeam.Players = []*Game.Player{}
+	msg.GameInfo.HomeTeam.Players = append(msg.GameInfo.HomeTeam.Players, aldair.Player)
+	msg.GameInfo.HomeTeam.Players = append(msg.GameInfo.HomeTeam.Players, bebeto.Player)
+	msg.GameInfo.AwayTeam.Players = []*Game.Player{}
+	msg.GameInfo.AwayTeam.Players =  append(msg.GameInfo.AwayTeam.Players, ronaldo.Player)
+	aldair.LastMsg = msg
 	assert.True(t, aldair.ShouldIDisputeForTheBall())
 }
