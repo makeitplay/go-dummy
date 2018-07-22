@@ -13,8 +13,7 @@ func TestBrain_watchOpponentOnMyRoute(t *testing.T) {
 	msg := Game.GameMessage{}
 	msg.GameInfo = Game.GameInfo{}
 	msg.GameInfo.Ball = Game.Ball{}
-	msg.GameInfo.Ball.Coords = strategy.GetRegionCenter(strategy.RegionCode{0,0}, Units.HomeTeam)
-
+	msg.GameInfo.Ball.Coords = strategy.GetRegionCenter(strategy.RegionCode{0, 0}, Units.HomeTeam)
 
 	A := Brain{}
 	A.Player = new(Game.Player)
@@ -49,25 +48,27 @@ func TestBrain_watchOpponentOnMyRoute(t *testing.T) {
 	msg.GameInfo.AwayTeam.Players = append(msg.GameInfo.AwayTeam.Players, D.Player)
 	A.LastMsg = msg
 
-	A.Coords = strategy.GetRegionCenter(strategy.RegionCode{1,1}, Units.HomeTeam)
-	B.Coords = strategy.GetRegionCenter(strategy.RegionCode{2,1}, Units.HomeTeam)
-	C.Coords = strategy.GetRegionCenter(strategy.RegionCode{3,1}, Units.HomeTeam)
-	D.Coords = strategy.GetRegionCenter(strategy.RegionCode{4,1}, Units.HomeTeam)
+	A.Coords = strategy.GetRegionCenter(strategy.RegionCode{1, 1}, Units.HomeTeam)
+	B.Coords = strategy.GetRegionCenter(strategy.RegionCode{2, 1}, Units.HomeTeam)
+	C.Coords = strategy.GetRegionCenter(strategy.RegionCode{3, 1}, Units.HomeTeam)
+	D.Coords = strategy.GetRegionCenter(strategy.RegionCode{4, 1}, Units.HomeTeam)
 
+	target := strategy.GetRegionCenter(strategy.RegionCode{5, 1}, Units.HomeTeam)
+	obstacles := watchOpponentOnMyRoute(A.Player, target)
+	assert.Len(t, obstacles, 3)
+	assert.Equal(t, float64(strategy.RegionWidth-Units.PlayerSize), A.Player.Coords.DistanceTo(obstacles[0]))
+	assert.Equal(t, float64(2*strategy.RegionWidth-Units.PlayerSize), A.Player.Coords.DistanceTo(obstacles[1]))
+	assert.Equal(t, float64(3*strategy.RegionWidth-Units.PlayerSize), A.Player.Coords.DistanceTo(obstacles[2]))
 
-	target := strategy.GetRegionCenter(strategy.RegionCode{5,1}, Units.HomeTeam)
-	objstacles := watchOpponentOnMyRoute(A.Player, target)
-	assert.Len(t, objstacles, 3)
+	D.Coords = strategy.GetRegionCenter(strategy.RegionCode{4, 2}, Units.HomeTeam)
+	obstacles = watchOpponentOnMyRoute(A.Player, target)
+	assert.Len(t, obstacles, 2)
 
-	D.Coords = strategy.GetRegionCenter(strategy.RegionCode{4,2}, Units.HomeTeam)
-	objstacles = watchOpponentOnMyRoute(A.Player, target)
-	assert.Len(t, objstacles, 2)
+	C.Coords = strategy.GetRegionCenter(strategy.RegionCode{3, 2}, Units.HomeTeam)
+	obstacles = watchOpponentOnMyRoute(A.Player, target)
+	assert.Len(t, obstacles, 1)
 
-	C.Coords = strategy.GetRegionCenter(strategy.RegionCode{3,2}, Units.HomeTeam)
-	objstacles = watchOpponentOnMyRoute(A.Player, target)
-	assert.Len(t, objstacles, 1)
-
-	B.Coords = strategy.GetRegionCenter(strategy.RegionCode{2,2}, Units.HomeTeam)
-	objstacles = watchOpponentOnMyRoute(A.Player, target)
-	assert.Len(t, objstacles, 0)
+	B.Coords = strategy.GetRegionCenter(strategy.RegionCode{2, 2}, Units.HomeTeam)
+	obstacles = watchOpponentOnMyRoute(A.Player, target)
+	assert.Len(t, obstacles, 0)
 }

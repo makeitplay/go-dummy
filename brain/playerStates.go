@@ -6,7 +6,6 @@ import (
 	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/commons/Physics"
 	"github.com/makeitplay/client-player-go/Game"
-	"reflect"
 )
 
 type PlayerState BasicTypes.State
@@ -79,32 +78,13 @@ func (b *Brain) orderForDsptFrblFrg() (msg string, orders []BasicTypes.Order) {
 //region Attack states
 
 func (b *Brain) orderForAtckHoldHse() (msg string, orders []BasicTypes.Order) {
-	obstacles := watchOpponentOnMyRoute(b.Player, b.OpponentGoal().Center)
+	nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 5)
+	obstacles := watchOpponentOnMyRoute(b.Player, nextSteps.TargetFrom(b.Player.Coords))
 
 	if len(obstacles) == 0 {
 		return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
-	} else if len(obstacles) == 1 {
-		num := reflect.ValueOf(obstacles).MapKeys()[0].String()
-		if b.calcDistanceScale(b.GetOpponentPlayer(b.LastMsg.GameInfo, num).Coords) != DISTANCE_SCALE_FAR {
-			return "Dribble this guys (not yet)", b.orderPassTheBall()
-		} else {
-			return "Advance watching", []BasicTypes.Order{b.orderAdvance()}
-		}
 	} else {
-		nearstObstacle := float64(Units.CourtWidth) //just initializing with a high value
-		//num := int(reflect.ValueOf(obstacles).MapKeys()[0].Int())
-		for opponentId := range obstacles {
-			oppCoord := b.GetOpponentPlayer(b.LastMsg.GameInfo, opponentId).Coords
-			oppDist := b.Coords.DistanceTo(oppCoord)
-			if oppDist < nearstObstacle {
-				nearstObstacle = oppDist
-			}
-		}
-		if nearstObstacle < Units.PlayerMaxSpeed*2 {
-			return "I need help guys!", b.orderPassTheBall()
-		} else {
-			return "Advance watching", []BasicTypes.Order{b.orderAdvance()}
-		}
+		return "I need help guys!", b.orderPassTheBall()
 	}
 }
 
@@ -114,21 +94,14 @@ func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
 	if math.Abs(goalDistance) < BallMaxSafePassDistance(Units.BallMaxSpeed) {
 		return "Shoot!", []BasicTypes.Order{b.CreateKickOrder(goalCoords, Units.BallMaxSpeed)}
 	} else {
-		obstacles := watchOpponentOnMyRoute(b.Player, b.OpponentGoal().Center)
+		nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 5)
+		obstacles := watchOpponentOnMyRoute(b.Player, nextSteps.TargetFrom(b.Player.Coords))
 
 		if len(obstacles) == 0 {
-			return "I am still free", []BasicTypes.Order{b.orderAdvance()}
-		} else if len(obstacles) == 1 {
-			num := reflect.ValueOf(obstacles).MapKeys()[0].String()
-			if b.calcDistanceScale(b.GetOpponentPlayer(b.LastMsg.GameInfo, num).Coords) != DISTANCE_SCALE_FAR {
-				return "Dribble this guys (not yet)", b.orderPassTheBall()
-			} else {
-				return "Advace watching", []BasicTypes.Order{b.orderAdvance()}
-			}
+			return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
 		} else {
-			return "I need help", b.orderPassTheBall()
+			return "I need help guys!", b.orderPassTheBall()
 		}
-
 	}
 }
 
@@ -277,12 +250,12 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 		if len(obstaclesToGoal) == 0 {
 			//commons.LogDebug("obstaclesToGoal %d", len(obstaclesToGoal))
 			score += 40
-		} else if obstaclesToGoal[0] > 3.0 * Units.PlayerMaxSpeed {
-			//commons.LogDebug("obstaclesToGoal are further than 3 frames")
-			score += 30
-		} else if obstaclesToGoal[0] > 1.0 * Units.PlayerMaxSpeed {
-			//commons.LogDebug("obstaclesToGoal are further than 1 frame")
-			score += 10
+		//} else if obstaclesToGoal[0] > 3.0 * Units.PlayerMaxSpeed {
+		//	commons.LogDebug("obstaclesToGoal are further than 3 frames")
+			//score += 30
+		//} else if obstaclesToGoal[0] > 1.0 * Units.PlayerMaxSpeed {
+		//	commons.LogDebug("obstaclesToGoal are further than 1 frame")
+			//score += 10
 		}
 
 		if distanceFromMe <= Units.BallMaxSpeed / 2 {
