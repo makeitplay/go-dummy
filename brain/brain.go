@@ -145,15 +145,20 @@ func (b *Brain) ShouldIDisputeForTheBall() bool {
 	return true
 }
 
-func (b *Brain) AmIBestAssistance() bool {
+func (b *Brain) ShouldIAssist() bool {
+	holderRule := strategy.DefinePlayerRule(b.LastMsg.GameInfo.Ball.Holder.Number)
 	if  strategy.DefinePlayerRule(b.LastMsg.GameInfo.Ball.Holder.Number) == MyRule {
 		return true
 	}
 	myDistance := b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Holder.Coords)
 	holderId := b.LastMsg.GameInfo.Ball.Holder.ID()
 	playerCloser := 0
-	for _, teamMate := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
-		if teamMate.ID() != holderId && teamMate.Number != b.Number && teamMate.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords) < myDistance {
+	for _, player := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
+		if
+		player.ID() != holderId &&  // the holder cannot help himself
+		player.Number != b.Number && // I wont count to myself
+		strategy.DefinePlayerRule(player.Number) != holderRule && // I wont count with the players rule mates because they should ALWAYS help
+		player.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords) < myDistance {
 			playerCloser++
 			if playerCloser > 1 {// are there more than two player closer to the ball than me?
 				return false

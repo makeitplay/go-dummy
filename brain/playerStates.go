@@ -108,7 +108,18 @@ func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
 }
 
 func (b *Brain) orderForAtckHelpHse() (msg string, orders []BasicTypes.Order) {
-	target := b.GetActiveRegionCenter(TeamState)
+	var region strategy.RegionCode
+	if b.ShouldIAssist() {
+		region = FindSpotToAssist(
+			b.LastMsg,
+			b.LastMsg.GameInfo.Ball.Holder,
+			b,
+			false,
+		)
+	}else {
+		region = b.GetActiveRegion(TeamState)
+	}
+	target := region.Center(b.TeamPlace)
 	if b.Coords.DistanceTo(target) < Units.PlayerMaxSpeed {
 		if b.Velocity.Speed > 0 {
 			orders = []BasicTypes.Order{b.CreateStopOrder(*Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
@@ -120,16 +131,17 @@ func (b *Brain) orderForAtckHelpHse() (msg string, orders []BasicTypes.Order) {
 }
 
 func (b *Brain) orderForAtckHelpFrg() (msg string, orders []BasicTypes.Order) {
-	if MyRule != strategy.MiddlePlayer { // middle players will give support
+	if MyRule == strategy.DefensePlayer { // middle players will give support
 		return b.orderForAtckHelpHse()
 	} else {
 		//distanceToHolder :=  b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Holder.Coords)
-		if b.AmIBestAssistance() {
+		if b.ShouldIAssist() {
 			//var bestCandidatePoint Physics.Point
 			bestCandidateRegion := FindSpotToAssist(
 				b.LastMsg,
 				b.LastMsg.GameInfo.Ball.Holder,
 				b,
+				true,
 			)
 
 			//obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo.Ball.Holder, bestCandidatePoint)
@@ -141,20 +153,25 @@ func (b *Brain) orderForAtckHelpFrg() (msg string, orders []BasicTypes.Order) {
 	return msg, orders
 }
 
-
-
-
-func FindSpotToAssist(gameMessage Game.GameMessage, assisted *Game.Player, assistant *Brain) strategy.RegionCode {
-
-	spotsCollection := ListSpotsCandidatesToAssistance(assisted, assistant)
+func FindSpotToAssist(gameMessage Game.GameMessage, assisted *Game.Player, assistant *Brain, offensively bool) strategy.RegionCode {
 	var availableSpots []strategy.RegionCode
-	for i, region := range spotsCollection {
-		isNotOccupied := len(assistant.GetPlayersInRegion(region, assistant.FindMyTeamStatus(gameMessage.GameInfo))) == 0
-		if isNotOccupied {
-			availableSpots = append(availableSpots, spotsCollection[i])
+	var spotList []strategy.RegionCode
+	if offensively {
+		spotList = ListSpotsCandidatesToOffensiveAssistance(assisted, assistant)
+	} else {
+		spotList = ListSpotsCandidatesToDefensiveAssistance(assisted, assistant)
+	}
+	for _, region := range spotList{
+		mateInTheRegion := assistant.GetPlayersInRegion(region, assistant.FindMyTeamStatus(gameMessage.GameInfo))
+		if len(mateInTheRegion) == 0 {
+			availableSpots = append(availableSpots, region)
+		} else {
+			isHimTheOwner := region == Brain{Player: mateInTheRegion[0]}.GetActiveRegion(TeamState)
+			if !isHimTheOwner && (region == assistant.GetActiveRegion(TeamState) || region == assistant.myCurrentRegion() ){
+				availableSpots = append(availableSpots, region)
+			}
 		}
 	}
-
 	sort.Slice(availableSpots, func(a, b int) bool {
 		teamStatus := assistant.GetOpponentTeam(gameMessage.GameInfo)
 		opponentsInA := len(assistant.GetPlayersInRegion(availableSpots[a], teamStatus))
@@ -170,7 +187,6 @@ func FindSpotToAssist(gameMessage Game.GameMessage, assisted *Game.Player, assis
 		APoints += float64(opponentsInB - opponentsInA)
 		APoints += distanceBToAssistant - distanceAToAssistant
 		APoints += float64(availableSpots[a].X - availableSpots[b].X) * 2.5
-
 		return APoints >= 0
 	})
 
@@ -178,35 +194,22 @@ func FindSpotToAssist(gameMessage Game.GameMessage, assisted *Game.Player, assis
 		return availableSpots[0]
 	}
 	return assistant.GetActiveRegion(TeamState)
-	//goodPlaceRegion := assistant.GetActiveRegion(TeamState).Forwards()
-	//goodPlace := goodPlaceRegion.Center(assistant.TeamPlace)
-	//findNewPoint := Physics.NewVector(assisted.Coords, goodPlace)
-	//greatPlace := findNewPoint.SetLength(strategy.RegionWidth).TargetFrom(assisted.Coords)
-	//
-	//obstacles := watchOpponentOnMyRoute(gameMessage.GameInfo, assisted, greatPlace)
-	//commons.LogWarning("The great place %v has %d obstacles", &greatPlace, len(obstacles))
-	//if len(obstacles) > 0 {
-	//	commons.LogWarning("I got a good place")
-	//	return goodPlace
-	//}
-	//commons.LogWarning("I got a great place")
-	//return greatPlace
 }
-func ListSpotsCandidatesToAssistance(assisted *Game.Player, assistant *Brain) []strategy.RegionCode {
+func ListSpotsCandidatesToOffensiveAssistance(assisted *Game.Player, assistant *Brain) []strategy.RegionCode {
 	spotCollection := []strategy.RegionCode{}
 	currentRegion := strategy.GetRegionCode(assisted.Coords, assistant.TeamPlace)
 
-	bestRegion := currentRegion.Forwards()
-	if bestRegion != currentRegion {
-		spotCollection = append(spotCollection, bestRegion)
+	front := currentRegion.Forwards()
+	if front != currentRegion {
+		spotCollection = append(spotCollection, front)
 	}
 
-	goodRegionA := currentRegion.Forwards().Left()
-	if currentRegion != goodRegionA {
+	goodRegionA := front.Left()
+	if currentRegion != front {
 		spotCollection = append(spotCollection, goodRegionA)
 	}
-	goodRegionB := currentRegion.Forwards().Right()
-	if currentRegion != goodRegionB {
+	goodRegionB := front.Right()
+	if currentRegion != front {
 		spotCollection = append(spotCollection, goodRegionB)
 	}
 
@@ -218,6 +221,26 @@ func ListSpotsCandidatesToAssistance(assisted *Game.Player, assistant *Brain) []
 	if currentRegion != fairRegionB {
 		spotCollection = append(spotCollection, fairRegionB)
 	}
+	return spotCollection
+}
+func ListSpotsCandidatesToDefensiveAssistance(assisted *Game.Player, assistant *Brain) []strategy.RegionCode {
+	spotCollection := []strategy.RegionCode{}
+	currentRegion := strategy.GetRegionCode(assisted.Coords, assistant.TeamPlace)
+
+	back := currentRegion.Backwards()
+	if back != currentRegion {
+		spotCollection = append(spotCollection, back)
+	}
+
+	goodRegionA := back.Left()
+	if currentRegion != back {
+		spotCollection = append(spotCollection, goodRegionA)
+	}
+	goodRegionB := back.Right()
+	if currentRegion != back {
+		spotCollection = append(spotCollection, goodRegionB)
+	}
+
 	return spotCollection
 }
 
