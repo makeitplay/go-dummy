@@ -18,6 +18,57 @@ type RegionCode struct {
 	Y int
 }
 
+func (r RegionCode) Center(place Units.TeamPlace) Physics.Point  {
+	center := Physics.Point{
+		PosX: (r.X * RegionWidth) + (RegionWidth/2),
+		PosY: (r.Y * RegionHeight) + (RegionHeight/2),
+	}
+	if place == Units.AwayTeam {
+		center = MirrorCoordsToAway(center)
+	}
+	return center
+}
+
+func (r RegionCode) Forwards() RegionCode  {
+	if r.X == 7 {
+		return r
+	}
+	return RegionCode{
+		X: r.X + 1,
+		Y: r.Y,
+	}
+}
+
+func (r RegionCode) Backwards() RegionCode  {
+	if r.X == 0 {
+		return r
+	}
+	return RegionCode{
+		X: r.X - 1,
+		Y: r.Y,
+	}
+}
+
+func (r RegionCode) Left() RegionCode  {
+	if r.Y == 3 {
+		return r
+	}
+	return RegionCode{
+		X: r.X,
+		Y: r.Y + 1,
+	}
+}
+
+func (r RegionCode) Right() RegionCode  {
+	if r.Y == 0 {
+		return r
+	}
+	return RegionCode{
+		X: r.X,
+		Y: r.Y - 1,
+	}
+}
+
 func GetRegionCode(a Physics.Point, place Units.TeamPlace) RegionCode {
 	if place == Units.AwayTeam {
 		a = MirrorCoordsToAway(a)
@@ -30,19 +81,6 @@ func GetRegionCode(a Physics.Point, place Units.TeamPlace) RegionCode {
 	}
 }
 
-func GetRegionCenter(code RegionCode, place Units.TeamPlace) Physics.Point {
-	if code.X > 7 || code.Y > 3 {
-		panic("invalid region code")
-	}
-	center := Physics.Point{
-		PosX: (code.X * RegionWidth) + (RegionWidth/2),
-		PosY: (code.Y * RegionHeight) + (RegionHeight/2),
-	}
-	if place == Units.AwayTeam {
-		center = MirrorCoordsToAway(center)
-	}
-	return center
-}
 
 // Invert the coords X and Y as in a mirror to found out the same position seen from the away team field
 // Keep in mind that all coords in the field is based on the bottom left corner!

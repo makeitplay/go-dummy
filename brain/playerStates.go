@@ -6,6 +6,8 @@ import (
 	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/commons/Physics"
 	"github.com/makeitplay/client-player-go/Game"
+	"github.com/makeitplay/go-dummy/strategy"
+	"sort"
 )
 
 type PlayerState BasicTypes.State
@@ -79,7 +81,7 @@ func (b *Brain) orderForDsptFrblFrg() (msg string, orders []BasicTypes.Order) {
 
 func (b *Brain) orderForAtckHoldHse() (msg string, orders []BasicTypes.Order) {
 	nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 5)
-	obstacles := watchOpponentOnMyRoute(b.Player, nextSteps.TargetFrom(b.Player.Coords))
+	obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
 
 	if len(obstacles) == 0 {
 		return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
@@ -95,7 +97,7 @@ func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
 		return "Shoot!", []BasicTypes.Order{b.CreateKickOrder(goalCoords, Units.BallMaxSpeed)}
 	} else {
 		nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 5)
-		obstacles := watchOpponentOnMyRoute(b.Player, nextSteps.TargetFrom(b.Player.Coords))
+		obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
 
 		if len(obstacles) == 0 {
 			return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
@@ -105,33 +107,130 @@ func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
 	}
 }
 
-//func (b *Brain) orderForAtckHelpHse() (msg string, orders []BasicTypes.Order) {
-//	if b.isItInMyActiveRegion(b.Coords) {
-//		switch b.calcDistanceScale(b.LastMsg.GameInfo.Ball.Coords) {
-//		case DISTANCE_SCALE_FAR:
-//			msg = "Let's attack!"
-//			orders = []BasicTypes.Order{b.CreateMoveOrder(b.LastMsg.GameInfo.Ball.Coords)}
-//		case DISTANCE_SCALE_NEAR:
-//			msg = "Given space"
-//			opositPoint := Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords).Invert().TargetFrom(b.Coords)
-//			vectorToOpositPoint := Physics.NewVector(b.Coords, b.OpponentGoal().Center)
-//			vectorToOpositPoint.Add(Physics.NewVector(b.Coords, opositPoint))
-//			orders = []BasicTypes.Order{b.CreateMoveOrder(vectorToOpositPoint.TargetFrom(b.Coords))}
-//		case DISTANCE_SCALE_GOOD:
-//			msg = "Give me the ball!"
-//			orders = []BasicTypes.Order{b.CreateMoveOrder(b.LastMsg.GameInfo.Ball.Coords)}
-//		}
-//	} else {
-//		msg = "I'll be right here"
-//		myRegionVector := Physics.NewVector(b.Coords, b.GetActiveRegionCenter()).Invert().TargetFrom(b.Coords)
-//		offensivePosition := Physics.NewVector(b.Coords, b.OpponentGoal().Center)
-//		offensivePosition.Add(Physics.NewVector(b.Coords, myRegionVector))
-//		orders = []BasicTypes.Order{b.CreateMoveOrder(offensivePosition.TargetFrom(b.Coords))}
-//	}
-//	return msg, orders
-//}
-//
-//func (b *Brain) orderForAtckHelpFrg() (msg string, orders []BasicTypes.Order) {
+func (b *Brain) orderForAtckHelpHse() (msg string, orders []BasicTypes.Order) {
+	target := b.GetActiveRegionCenter(TeamState)
+	if b.Coords.DistanceTo(target) < Units.PlayerMaxSpeed {
+		if b.Velocity.Speed > 0 {
+			orders = []BasicTypes.Order{b.CreateStopOrder(*Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
+		}
+	} else {
+		orders = []BasicTypes.Order{b.CreateMoveOrder(target)}
+	}
+	return msg, orders
+}
+
+func (b *Brain) orderForAtckHelpFrg() (msg string, orders []BasicTypes.Order) {
+	if MyRule != strategy.MiddlePlayer { // middle players will give support
+		return b.orderForAtckHelpHse()
+	} else {
+		//distanceToHolder :=  b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Holder.Coords)
+		if b.AmIBestAssistance() {
+			//var bestCandidatePoint Physics.Point
+			bestCandidateRegion := FindSpotToAssist(
+				b.LastMsg,
+				b.LastMsg.GameInfo.Ball.Holder,
+				b,
+			)
+
+			//obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo.Ball.Holder, bestCandidatePoint)
+			orders = []BasicTypes.Order{b.CreateMoveOrder(bestCandidateRegion.Center(b.TeamPlace))}
+		} else {
+			return b.orderForAtckHelpHse()
+		}
+	}
+	return msg, orders
+}
+
+
+
+
+func FindSpotToAssist(gameMessage Game.GameMessage, assisted *Game.Player, assistant *Brain) strategy.RegionCode {
+
+	spotsCollection := ListSpotsCandidatesToAssistance(assisted, assistant)
+	var availableSpots []strategy.RegionCode
+	for i, region := range spotsCollection {
+		isNotOccupied := len(assistant.GetPlayersInRegion(region, assistant.FindMyTeamStatus(gameMessage.GameInfo))) == 0
+		if isNotOccupied {
+			availableSpots = append(availableSpots, spotsCollection[i])
+		}
+	}
+
+	sort.Slice(availableSpots, func(a, b int) bool {
+		teamStatus := assistant.GetOpponentTeam(gameMessage.GameInfo)
+		opponentsInA := len(assistant.GetPlayersInRegion(availableSpots[a], teamStatus))
+		opponentsInB := len(assistant.GetPlayersInRegion(availableSpots[b], teamStatus))
+
+		distanceToA := math.Round(assistant.Coords.DistanceTo(availableSpots[a].Center(assistant.TeamPlace)) / strategy.RegionWidth)
+		distanceToB := math.Round(assistant.Coords.DistanceTo(availableSpots[b].Center(assistant.TeamPlace)) / strategy.RegionWidth)
+
+		distanceAToAssistant := math.Round(assisted.Coords.DistanceTo(availableSpots[a].Center(assistant.TeamPlace)) / strategy.RegionWidth)
+		distanceBToAssistant := math.Round(assisted.Coords.DistanceTo(availableSpots[b].Center(assistant.TeamPlace)) / strategy.RegionWidth)
+
+		APoints := distanceToB - distanceToA
+		APoints += float64(opponentsInB - opponentsInA)
+		APoints += distanceBToAssistant - distanceAToAssistant
+		APoints += float64(availableSpots[a].X - availableSpots[b].X) * 2.5
+
+		return APoints >= 0
+	})
+
+	if len(availableSpots) > 0 {
+		return availableSpots[0]
+	}
+	return assistant.GetActiveRegion(TeamState)
+	//goodPlaceRegion := assistant.GetActiveRegion(TeamState).Forwards()
+	//goodPlace := goodPlaceRegion.Center(assistant.TeamPlace)
+	//findNewPoint := Physics.NewVector(assisted.Coords, goodPlace)
+	//greatPlace := findNewPoint.SetLength(strategy.RegionWidth).TargetFrom(assisted.Coords)
+	//
+	//obstacles := watchOpponentOnMyRoute(gameMessage.GameInfo, assisted, greatPlace)
+	//commons.LogWarning("The great place %v has %d obstacles", &greatPlace, len(obstacles))
+	//if len(obstacles) > 0 {
+	//	commons.LogWarning("I got a good place")
+	//	return goodPlace
+	//}
+	//commons.LogWarning("I got a great place")
+	//return greatPlace
+}
+func ListSpotsCandidatesToAssistance(assisted *Game.Player, assistant *Brain) []strategy.RegionCode {
+	spotCollection := []strategy.RegionCode{}
+	currentRegion := strategy.GetRegionCode(assisted.Coords, assistant.TeamPlace)
+
+	bestRegion := currentRegion.Forwards()
+	if bestRegion != currentRegion {
+		spotCollection = append(spotCollection, bestRegion)
+	}
+
+	goodRegionA := currentRegion.Forwards().Left()
+	if currentRegion != goodRegionA {
+		spotCollection = append(spotCollection, goodRegionA)
+	}
+	goodRegionB := currentRegion.Forwards().Right()
+	if currentRegion != goodRegionB {
+		spotCollection = append(spotCollection, goodRegionB)
+	}
+
+	fairRegionA := currentRegion.Left()
+	if currentRegion != fairRegionA {
+		spotCollection = append(spotCollection, fairRegionA)
+	}
+	fairRegionB := currentRegion.Right()
+	if currentRegion != fairRegionB {
+		spotCollection = append(spotCollection, fairRegionB)
+	}
+	return spotCollection
+}
+
+func isPerfectPlace(coords Physics.Point, gameMessage Game.GameMessage, assisted *Game.Player, assistant *Brain) bool {
+	obstacles := watchOpponentOnMyRoute(gameMessage.GameInfo, assisted, coords)
+	bestPlaceRegion := strategy.GetRegionCode(coords, assistant.TeamPlace)
+
+	thereIsOpponents := len(obstacles)
+	thereIsNoMate := len(assistant.GetPlayersInRegion(bestPlaceRegion, assistant.FindMyTeamStatus(gameMessage.GameInfo))) == 0
+	return thereIsOpponents == 0 && thereIsNoMate
+}
+
+
 //	if b.isItInMyActiveRegion(b.Coords) {
 //		switch b.calcDistanceScale(b.LastMsg.GameInfo.Ball.Coords) {
 //		case DISTANCE_SCALE_FAR:
@@ -236,8 +335,8 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 		//commons.LogWarning("Evaluating %s", playerMate.Number)
 
 
-		obstaclesFromMe := watchOpponentOnMyRoute(b.Player, playerMate.Coords)
-		obstaclesToGoal := watchOpponentOnMyRoute(playerMate, b.OpponentGoal().Center)
+		obstaclesFromMe := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, playerMate.Coords)
+		obstaclesToGoal := watchOpponentOnMyRoute(b.LastMsg.GameInfo, playerMate, b.OpponentGoal().Center)
 		distanceFromMe := b.Coords.DistanceTo(playerMate.Coords)
 		distanceToGoal := playerMate.Coords.DistanceTo(b.OpponentGoal().Center)
 

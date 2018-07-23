@@ -30,17 +30,17 @@ func (s SortByDistance) Less(i, j int) bool {
 }
 
 // watchOpponentOnMyRoute returns a list for obstacle between the player an it's target sorted by the distance to it
-func watchOpponentOnMyRoute(player *Game.Player, target Physics.Point) PointCollection {
-	opponentTeam := player.GetOpponentTeam(player.LastMsg.GameInfo)
-	cllisionPoints := SortByDistance{From: player.Coords}
+func watchOpponentOnMyRoute(status Game.GameInfo, player *Game.Player, target Physics.Point) PointCollection {
+	opponentTeam := player.GetOpponentTeam(status)
+	collisionPoints := SortByDistance{From: player.Coords}
 
 	vectorExpected := Physics.NewVector(player.Coords, target)
 	for _, opponent := range opponentTeam.Players {
 		collisionPoint := opponent.VectorCollides(*vectorExpected, player.Coords, float64(player.Size)/2)
 
 		if collisionPoint != nil {
-			cllisionPoints.PointCollection = append(cllisionPoints.PointCollection, *collisionPoint)
+			collisionPoints.PointCollection = append(collisionPoints.PointCollection, *collisionPoint)
 		}
 	}
-	return cllisionPoints.PointCollection
+	return collisionPoints.PointCollection
 }

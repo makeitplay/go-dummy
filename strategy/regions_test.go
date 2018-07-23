@@ -36,27 +36,27 @@ func TestGetRegionCode(t *testing.T) {
 func TestGetRegionCenter(t *testing.T) {
 	halfRegionHeight := RegionHeight / 2
 	halfRegionWidth := RegionWidth / 2
-	center := GetRegionCenter(RegionCode{0,0}, Units.HomeTeam)
+	center := RegionCode{0,0}.Center(Units.HomeTeam)
 	assert.Equal(t, halfRegionWidth, center.PosX)
 	assert.Equal(t, halfRegionHeight, center.PosY)
 
-	center = GetRegionCenter(RegionCode{0,0}, Units.AwayTeam)
+	center = RegionCode{0,0}.Center(Units.AwayTeam)
 	assert.Equal(t,  Units.CourtWidth - halfRegionWidth, center.PosX)
 	assert.Equal(t, Units.CourtHeight - halfRegionHeight, center.PosY)
 
-	center = GetRegionCenter(RegionCode{7,3}, Units.HomeTeam)
+	center = RegionCode{7,3}.Center(Units.HomeTeam)
 	assert.Equal(t,  Units.CourtWidth - halfRegionWidth, center.PosX)
 	assert.Equal(t, Units.CourtHeight - halfRegionHeight, center.PosY)
 
-	center = GetRegionCenter(RegionCode{7,3}, Units.AwayTeam)
+	center = RegionCode{7,3}.Center(Units.AwayTeam)
 	assert.Equal(t, halfRegionWidth, center.PosX)
 	assert.Equal(t, halfRegionHeight, center.PosY)
 
-	center = GetRegionCenter(RegionCode{0,3}, Units.HomeTeam)
+	center = RegionCode{0,3}.Center(Units.HomeTeam)
 	assert.Equal(t,  halfRegionWidth, center.PosX)
 	assert.Equal(t, Units.CourtHeight - halfRegionHeight, center.PosY)
 
-	center = GetRegionCenter(RegionCode{7,0}, Units.AwayTeam)
+	center = RegionCode{7,0}.Center(Units.AwayTeam)
 	assert.Equal(t,  halfRegionWidth, center.PosX)
 	assert.Equal(t, Units.CourtHeight - halfRegionHeight, center.PosY)
 

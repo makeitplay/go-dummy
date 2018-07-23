@@ -2,8 +2,7 @@ package strategy
 
 import (
 	"github.com/makeitplay/commons/BasicTypes"
-	"github.com/makeitplay/client-player-go/Game"
-	"github.com/makeitplay/commons/Units"
+	"strconv"
 )
 
 type TeamState string
@@ -14,32 +13,15 @@ const Neutral TeamState = "neutral"
 const Offensive TeamState = "offensive"
 const OnAttack TeamState = "on-attack"
 
-func DetermineTeamState(msg Game.GameMessage, place Units.TeamPlace) TeamState {
-	ballRegionCode := GetRegionCode(msg.GameInfo.Ball.Coords, place)
-	if msg.GameInfo.Ball.Holder == nil || msg.GameInfo.Ball.Holder.TeamPlace != place {
-		if ballRegionCode.X < 2 {
-			return UnderPressure
-		} else if ballRegionCode.X < 4 {
-			return Defensive
-		} else if ballRegionCode.X < 6 {
-			return Neutral
-		} else {
-			return Offensive
-		}
-	} else {
-		if ballRegionCode.X < 2 {
-			return Defensive
-		} else if ballRegionCode.X < 4 {
-			return Neutral
-		} else if ballRegionCode.X < 6 {
-			return Offensive
-		} else {
-			return OnAttack
-		}
-	}
-}
-
 type Region map[TeamState]RegionCode
+
+type PlayerRule string
+
+const (
+	DefensePlayer PlayerRule = "defense"
+	MiddlePlayer  PlayerRule = "middle"
+	AttackPlayer  PlayerRule = "attack"
+)
 
 var PlayerRegionMap = map[BasicTypes.PlayerNumber]Region{
 	//defense players
@@ -104,17 +86,28 @@ var PlayerRegionMap = map[BasicTypes.PlayerNumber]Region{
 
 	//attack players
 	"10": {
-		UnderPressure: RegionCode{2, 1},
-		Defensive:     RegionCode{3, 1},
-		Neutral:       RegionCode{4, 1},
-		Offensive:     RegionCode{5, 1},
+		UnderPressure: RegionCode{3, 1},
+		Defensive:     RegionCode{4, 1},
+		Neutral:       RegionCode{5, 1},
+		Offensive:     RegionCode{6, 1},
 		OnAttack:      RegionCode{6, 1},
 	},
 	"11": {
-		UnderPressure: RegionCode{2, 2},
-		Defensive:     RegionCode{3, 2},
-		Neutral:       RegionCode{4, 2},
-		Offensive:     RegionCode{5, 2},
+		UnderPressure: RegionCode{3, 2},
+		Defensive:     RegionCode{4, 2},
+		Neutral:       RegionCode{5, 2},
+		Offensive:     RegionCode{6, 2},
 		OnAttack:      RegionCode{6, 2},
 	},
+}
+
+func DefinePlayerRule(number BasicTypes.PlayerNumber) PlayerRule {
+	num, _ := strconv.Atoi(string(number))
+	if num < 6 {
+		return DefensePlayer
+	} else if num < 10 {
+		return MiddlePlayer
+	} else {
+		return AttackPlayer
+	}
 }
