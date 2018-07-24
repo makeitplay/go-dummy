@@ -27,6 +27,9 @@ type Brain struct {
 
 func (b *Brain) ResetPosition() {
 	region := b.GetActiveRegion(strategy.Defensive)
+	if MyRule == strategy.AttackPlayer {
+		region = b.GetActiveRegion(strategy.UnderPressure)
+	}
 	b.Coords = region.Center(b.TeamPlace)
 }
 

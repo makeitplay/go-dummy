@@ -131,26 +131,66 @@ func (b *Brain) orderForAtckHelpHse() (msg string, orders []BasicTypes.Order) {
 }
 
 func (b *Brain) orderForAtckHelpFrg() (msg string, orders []BasicTypes.Order) {
-	if MyRule == strategy.DefensePlayer { // middle players will give support
+	if MyRule == strategy.DefensePlayer || !b.ShouldIAssist() { // middle players will give support
 		return b.orderForAtckHelpHse()
 	} else {
-		//distanceToHolder :=  b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Holder.Coords)
-		if b.ShouldIAssist() {
-			//var bestCandidatePoint Physics.Point
-			bestCandidateRegion := FindSpotToAssist(
-				b.LastMsg,
-				b.LastMsg.GameInfo.Ball.Holder,
-				b,
-				true,
+		//var bestCandidatePoint Physics.Point
+		bestCandidateRegion := FindSpotToAssist(
+			b.LastMsg,
+			b.LastMsg.GameInfo.Ball.Holder,
+			b,
+			true,
+		)
+		//target := bestCandidateRegion.Center(b.TeamPlace)
+		target := FindBestPointInRegionToAssist(
+			b.LastMsg,
+			bestCandidateRegion,
+			b.LastMsg.GameInfo.Ball.Holder,
 			)
-
-			//obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo.Ball.Holder, bestCandidatePoint)
-			orders = []BasicTypes.Order{b.CreateMoveOrder(bestCandidateRegion.Center(b.TeamPlace))}
+		//obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo.Ball.Holder, bestCandidatePoint)
+		if b.Coords.DistanceTo(target) < Units.PlayerMaxSpeed {
+			if b.Velocity.Speed > 0 {
+				orders = []BasicTypes.Order{b.CreateStopOrder(*Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
+			}
 		} else {
-			return b.orderForAtckHelpHse()
+			orders = []BasicTypes.Order{b.CreateMoveOrder(target)}
 		}
 	}
 	return msg, orders
+}
+func FindBestPointInRegionToAssist(gameMessage Game.GameMessage, region strategy.RegionCode, assisted *Game.Player, ) (target Physics.Point) {
+	centerPoint := region.Center(assisted.TeamPlace)
+	vctToCenter := Physics.NewVector(assisted.Coords, centerPoint).SetLength(strategy.RegionWidth)
+	obstacles := watchOpponentOnMyRoute(gameMessage.GameInfo, assisted, vctToCenter.TargetFrom(assisted.Coords))
+	if len(obstacles) == 0 {
+		return vctToCenter.TargetFrom(assisted.Coords)
+	} else {
+		initialVector := vctToCenter
+		avoidObstacles := func(ang float64) bool  {
+			tries := 3
+			for tries > 0 {
+				vctToCenter.AddAngleDegree(ang)
+				target = vctToCenter.TargetFrom(assisted.Coords)
+				if region != strategy.GetRegionCode(target, assisted.TeamPlace) {
+					//too far
+					tries = 0
+				}
+				obstacles = watchOpponentOnMyRoute(gameMessage.GameInfo, assisted, target)
+				tries--
+				if len(obstacles) <= 0 {
+					return true
+				}
+			}
+			return false
+		}
+
+		if !avoidObstacles(10) && !avoidObstacles(-10){
+			target = initialVector.TargetFrom(assisted.Coords)
+		}
+	}
+
+	return
+
 }
 
 func FindSpotToAssist(gameMessage Game.GameMessage, assisted *Game.Player, assistant *Brain, offensively bool) strategy.RegionCode {
@@ -165,10 +205,19 @@ func FindSpotToAssist(gameMessage Game.GameMessage, assisted *Game.Player, assis
 		mateInTheRegion := assistant.GetPlayersInRegion(region, assistant.FindMyTeamStatus(gameMessage.GameInfo))
 		if len(mateInTheRegion) == 0 {
 			availableSpots = append(availableSpots, region)
-		} else {
-			isHimTheOwner := region == Brain{Player: mateInTheRegion[0]}.GetActiveRegion(TeamState)
-			if !isHimTheOwner && (region == assistant.GetActiveRegion(TeamState) || region == assistant.myCurrentRegion() ){
+		} else if region == assistant.GetActiveRegion(TeamState) {
+				// eu to no meu canto, me deixe em paz
 				availableSpots = append(availableSpots, region)
+		} else {
+			frankenstein := Brain{Player: mateInTheRegion[0]}
+			isHimTheOwner := region == frankenstein.GetActiveRegion(TeamState)
+			if !isHimTheOwner && assistant.myCurrentRegion() == region {
+				// two invasors disputing
+				myDistanceToTheBall := assistant.Coords.DistanceTo(assisted.Coords)
+				invasorDistanceToTheBall := assistant.Coords.DistanceTo(mateInTheRegion[0].Coords)
+				if myDistanceToTheBall < invasorDistanceToTheBall {
+					availableSpots = append(availableSpots, region)
+				}
 			}
 		}
 	}
@@ -204,21 +253,23 @@ func ListSpotsCandidatesToOffensiveAssistance(assisted *Game.Player, assistant *
 		spotCollection = append(spotCollection, front)
 	}
 
+	assistantActiveRegion := assistant.GetActiveRegion(TeamState)
+
 	goodRegionA := front.Left()
-	if currentRegion != front {
+	if currentRegion != front && goodRegionA.ChessDistanceTo(assistantActiveRegion) < 2 {
 		spotCollection = append(spotCollection, goodRegionA)
 	}
 	goodRegionB := front.Right()
-	if currentRegion != front {
+	if currentRegion != front && goodRegionB.ChessDistanceTo(assistantActiveRegion) < 2 {
 		spotCollection = append(spotCollection, goodRegionB)
 	}
 
 	fairRegionA := currentRegion.Left()
-	if currentRegion != fairRegionA {
+	if currentRegion != fairRegionA && fairRegionA.ChessDistanceTo(assistantActiveRegion) < 2 {
 		spotCollection = append(spotCollection, fairRegionA)
 	}
 	fairRegionB := currentRegion.Right()
-	if currentRegion != fairRegionB {
+	if currentRegion != fairRegionB && fairRegionB.ChessDistanceTo(assistantActiveRegion) < 2 {
 		spotCollection = append(spotCollection, fairRegionB)
 	}
 	return spotCollection

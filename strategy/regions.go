@@ -29,6 +29,28 @@ func (r RegionCode) Center(place Units.TeamPlace) Physics.Point  {
 	return center
 }
 
+func (r RegionCode) ForwardRightCorner(place Units.TeamPlace) Physics.Point  {
+	fr := Physics.Point{
+		PosX: (r.X + 1) * RegionWidth,
+		PosY: r.Y * RegionHeight,
+	}
+	if place == Units.AwayTeam {
+		fr = MirrorCoordsToAway(fr)
+	}
+	return fr
+}
+
+func (r RegionCode) ForwardLeftCorner(place Units.TeamPlace) Physics.Point  {
+	fl := Physics.Point{
+		PosX: (r.X + 1) * RegionWidth,
+		PosY: (r.Y + 1) * RegionHeight,
+	}
+	if place == Units.AwayTeam {
+		fl = MirrorCoordsToAway(fl)
+	}
+	return fl
+}
+
 func (r RegionCode) Forwards() RegionCode  {
 	if r.X == 7 {
 		return r
@@ -68,6 +90,15 @@ func (r RegionCode) Right() RegionCode  {
 		Y: r.Y - 1,
 	}
 }
+
+func (r RegionCode) ChessDistanceTo(b RegionCode) int {
+	return int(math.Max(
+		math.Abs(float64(r.X - b.X)),
+		math.Abs(float64(r.Y - b.Y)),
+	))
+}
+
+
 
 func GetRegionCode(a Physics.Point, place Units.TeamPlace) RegionCode {
 	if place == Units.AwayTeam {
