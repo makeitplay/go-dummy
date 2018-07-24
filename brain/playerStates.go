@@ -42,7 +42,7 @@ const (
 	DsptFrblFrg PlayerState = "dsp-fbl-fr"
 )
 
-const PerfectPassDistance = Units.BallMaxSpeed - (Units.BallDeceleration/2)
+const PerfectPassDistance = float64(Units.BallMaxSpeed - (Units.BallDeceleration/2))
 
 type DistanceScale string
 
@@ -452,25 +452,31 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 }
 
 func (b *Brain) BestSpeedToTarget(target Physics.Point) float64 {
-	s := b.LastMsg.GameInfo.Ball.Coords.DistanceTo(target)
-	v := Units.BallMaxSpeed
-	a := float64(-Units.BallDeceleration)
-	//(a/2)t^2 + vt - s
+	distance := b.LastMsg.GameInfo.Ball.Coords.DistanceTo(target)
+	ballSpeed := Units.BallMaxSpeed
+	deceleration := float64(Units.BallDeceleration)
 
-	// delta: b^2 -4.a.c
-	delta := math.Pow(v, 2) - 4 * -s * a
+	//quadratic formula (-a/2)t^2 + vt - s
+	A := -deceleration /2
+	B := ballSpeed
+	C := -distance
+
+	// delta: B^2 -4.A.C
+	delta := math.Pow(B, 2) - 4 * A * C
 
 	// quadratic formula: -b +/- sqrt(delta)/2a
-	t1 := (- v + math.Sqrt(delta)) / a
+	t1 := (- B + math.Sqrt(delta)) / (2*A)
 	if math.IsNaN(t1) {// target too far
 		return Units.BallMaxSpeed
 	}
+	//t2 := (- B / math.Sqrt(delta)) / (2*A) //opposite side
 
-	//t2 := (- v - math.Sqrt(delta)) / a
-
-	t := math.Ceil(t1)
-
-	return (s - (a/2)*math.Pow(t,2)) / t
+	//S = So + Vt + (at^2)2
+	//v =  ( s - (at^2)/2 ) / t
+	s := distance
+	ac := -deceleration
+	t := math.Ceil(t1) // there is no half frame, so, 1.3 means more than one frame
+	return (s - ((ac*math.Pow(t,2))/2) ) / t
 }
 
 // calc a distance scale where the player could target
