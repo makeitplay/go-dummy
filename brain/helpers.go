@@ -4,6 +4,7 @@ import (
 	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/commons/Physics"
 	"github.com/makeitplay/client-player-go/Game"
+	"math"
 )
 
 func BallMaxSafePassDistance(Speed float64) float64 {
@@ -43,4 +44,13 @@ func watchOpponentOnMyRoute(status Game.GameInfo, player *Game.Player, target Ph
 		}
 	}
 	return collisionPoints.PointCollection
+}
+
+func QuadraticResults(a, b, c float64) (float64, float64) {
+	// delta: B^2 -4.A.C
+	delta := math.Pow(b, 2) - 4*a*c
+	// quadratic formula: -b +/- sqrt(delta)/2a
+	t1 := (- b + math.Sqrt(delta)) / (2 * a)
+	t2 := (- b - math.Sqrt(delta)) / (2 * a)
+	return t1, t2
 }

@@ -90,6 +90,11 @@ func (b *Brain) TakeAnAction() {
 	var orders []BasicTypes.Order
 	var msg string
 
+	if b.IsGoalkeeper() {
+		msg, orders = b.orderForGoalkeeper()
+		b.SendOrders(fmt.Sprintf("[%s-%s] %s", b.State, TeamState, msg), orders...)
+		return
+	}
 	switch b.State {
 	case DsptNfblHse:
 		msg, orders = b.orderForDsptNfblHse()
@@ -120,12 +125,14 @@ func (b *Brain) TakeAnAction() {
 		orders = []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
 
 	}
-
 	b.SendOrders(fmt.Sprintf("[%s-%s] %s", b.State, TeamState, msg), orders...)
-
 }
 
 func (b *Brain) ShouldIDisputeForTheBall() bool {
+	if strategy.GetRegionCode(b.LastMsg.GameInfo.Ball.Coords, b.TeamPlace).ChessDistanceTo(b.GetActiveRegion(TeamState)) < 2 {
+		return true
+	}
+
 	myDistance := b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords)
 	playerCloser := 0
 	for _, teamMate := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
@@ -202,10 +209,76 @@ func (b *Brain) FindBestPointInterceptBall() (speed float64, target Physics.Poin
 	}
 }
 func (b *Brain) FindBestPointShootTheBall() (speed float64, target Physics.Point) {
-	goolkeeper := b.GetOpponentPlayer(b.LastMsg.GameInfo, BasicTypes.PlayerNumber("1"))
-	if goolkeeper.Coords.PosY > Units.CourtHeight / 2 {
-		return Units.BallMaxSpeed, b.OpponentGoal().BottomPole
+	goalkeeper := b.GetOpponentPlayer(b.LastMsg.GameInfo, BasicTypes.PlayerNumber("1"))
+	if goalkeeper.Coords.PosY > Units.CourtHeight / 2 {
+		return Units.BallMaxSpeed, Physics.Point{
+			PosX: b.OpponentGoal().BottomPole.PosX,
+			PosY: b.OpponentGoal().BottomPole.PosY + Units.BallSize,
+
+		}
 	} else {
-		return Units.BallMaxSpeed, b.OpponentGoal().TopPole
+		return Units.BallMaxSpeed, Physics.Point{
+			PosX: b.OpponentGoal().TopPole.PosX,
+			PosY: b.OpponentGoal().TopPole.PosY - Units.BallSize,
+
+		}
+	}
+}
+
+func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
+	//V = Vo + at -> t = Vo/a
+	//framesToStop := Units.BallMaxSpeed/Units.BallDeceleration
+	// (a*t^2)/2 + v*t - s
+	//ballLongestShot := Units.BallMaxSpeed*framesToStop + (-Units.BallDeceleration/2) * math.Pow(framesToStop, 2)
+
+	myGoal := b.DefenseGoal()
+	longestDistance := Units.GoalWidth - Units.GoalKeeperJumpLength
+	//s = so + vt
+	t := float64(longestDistance / Units.PlayerMaxSpeed) + 1 //11
+
+	distanceWatchBall := Units.BallMaxSpeed*t + float64(-Units.BallDeceleration/2) * math.Pow(t, 2)
+
+	if b.LastMsg.GameInfo.Ball.Coords.DistanceTo(myGoal.Center) <= distanceWatchBall {
+		distanceToTopPole := b.LastMsg.GameInfo.Ball.Coords.DistanceTo(myGoal.TopPole)
+		distanceToBottomPole := b.LastMsg.GameInfo.Ball.Coords.DistanceTo(myGoal.BottomPole)
+		//find how many frames it would take from the closest place
+		//(a*t^2)/2 + v*t - s
+		t1, t2 := QuadraticResults(-Units.BallDeceleration/2, Units.BallMaxSpeed, -distanceToTopPole)
+		framesToTop := int(math.Ceil(math.Min(t1, t2)))
+
+		t1, t2 = QuadraticResults(-Units.BallDeceleration/2, Units.BallMaxSpeed, -distanceToBottomPole)
+		framesToBottom := int(math.Ceil(math.Min(t1, t2)))
+
+		var poleInRisk Physics.Point
+		var frameToReact int
+		if framesToTop < framesToBottom {
+			poleInRisk = myGoal.TopPole
+			frameToReact = framesToTop
+		} else {
+			poleInRisk = myGoal.BottomPole
+			frameToReact = framesToBottom
+		}
+		//the furthest safe place from the most risk side
+		//S = so + vt
+		maxDistanceICanRun := float64 (Units.PlayerMaxSpeed * frameToReact) + Units.GoalKeeperJumpLength
+		safePoint := Physics.NewVector(poleInRisk, myGoal.Center).SetLength(maxDistanceICanRun).TargetFrom(poleInRisk)
+		distanceToSafePoint := safePoint.DistanceTo(b.Coords)
+		if distanceToSafePoint > Units.PlayerMaxSpeed {
+			return "Run to best spot!", []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(safePoint)}
+		} else if distanceToSafePoint < 5 {//just a tolerance
+			return "Be focused!!", []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
+		} else {
+			return "To center", []BasicTypes.Order{b.CreateMoveOrder(safePoint, distanceToSafePoint)}
+		}
+
+	} else {
+		distanceFromMiddle := b.Coords.DistanceTo(myGoal.Center)
+		if distanceFromMiddle > Units.PlayerMaxSpeed {
+			return "Back to position!", []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(myGoal.Center)}
+		} else if distanceFromMiddle < 5 {//just a tolerance
+			return "Just watch the game!", []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
+		} else {
+			return "To center", []BasicTypes.Order{b.CreateMoveOrder(myGoal.Center, distanceFromMiddle)}
+		}
 	}
 }
