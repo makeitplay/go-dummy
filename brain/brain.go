@@ -112,19 +112,9 @@ func (b *Brain) TakeAnAction() {
 		msg, orders = b.orderForAtckHelpHse()
 	case AtckHelpFrg:
 		msg, orders = b.orderForAtckHelpFrg()
-
-		//case DefdMyrgHse:
-		//	msg, orders = b.orderForDefdMyrgHse()
-		//	orders = append(orders, b.CreateCatchOrder())
-		//case DefdMyrgFrg:
-		//	msg, orders = b.orderForDefdMyrgFrg()
-		//	orders = append(orders, b.CreateCatchOrder())
-		//case DefdOtrgHse:
-		//	msg, orders = b.orderForDefdOtrgHse()
-		//	orders = append(orders, b.CreateCatchOrder())
-		//case DefdOtrgFrg:
-		//	msg, orders = b.orderForDefdOtrgFrg()
-		//	orders = append(orders, b.CreateCatchOrder())
+	case DefdMyrgHse, DefdMyrgFrg, DefdOtrgHse, DefdOtrgFrg:
+		msg, orders = b.orderForDefdOtrgFrg()
+		orders = append(orders, b.CreateCatchOrder())
 	default:
 		msg = "Freeze position"
 		orders = []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
@@ -141,7 +131,7 @@ func (b *Brain) ShouldIDisputeForTheBall() bool {
 	for _, teamMate := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
 		if teamMate.Number != b.Number && teamMate.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords) < myDistance {
 			playerCloser++
-			if playerCloser > 1 {// are there more than on player closer to the ball than me?
+			if playerCloser > 1 { // are there more than on player closer to the ball than me?
 				return false
 			}
 		}
@@ -151,7 +141,7 @@ func (b *Brain) ShouldIDisputeForTheBall() bool {
 
 func (b *Brain) ShouldIAssist() bool {
 	holderRule := strategy.DefinePlayerRule(b.LastMsg.GameInfo.Ball.Holder.Number)
-	if  strategy.DefinePlayerRule(b.LastMsg.GameInfo.Ball.Holder.Number) == MyRule {
+	if strategy.DefinePlayerRule(b.LastMsg.GameInfo.Ball.Holder.Number) == MyRule {
 		return true
 	}
 	myDistance := b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Holder.Coords)
@@ -159,12 +149,12 @@ func (b *Brain) ShouldIAssist() bool {
 	playerCloser := 0
 	for _, player := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
 		if
-		player.ID() != holderId &&  // the holder cannot help himself
-		player.Number != b.Number && // I wont count to myself
-		strategy.DefinePlayerRule(player.Number) != holderRule && // I wont count with the players rule mates because they should ALWAYS help
-		player.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords) < myDistance {
+		player.ID() != holderId && // the holder cannot help himself
+			player.Number != b.Number && // I wont count to myself
+			strategy.DefinePlayerRule(player.Number) != holderRule && // I wont count with the players rule mates because they should ALWAYS help
+			player.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords) < myDistance {
 			playerCloser++
-			if playerCloser > 1 {// are there more than two player closer to the ball than me?
+			if playerCloser > 1 { // are there more than two player closer to the ball than me?
 				return false
 			}
 		}
@@ -180,7 +170,7 @@ func (b *Brain) FindBestPointInterceptBall() (speed float64, target Physics.Poin
 			V := b.LastMsg.GameInfo.Ball.Velocity.Speed
 			T := float64(frame)
 			a := -Units.BallDeceleration
-			distance := V * T + ( a * math.Pow(T,2) )/2
+			distance := V*T + (a*math.Pow(T, 2))/2
 			if distance <= 0 {
 				return nil
 			}
@@ -198,7 +188,7 @@ func (b *Brain) FindBestPointInterceptBall() (speed float64, target Physics.Poin
 			}
 			minDistanceToTouch := ballLocation.DistanceTo(b.Coords) - ((Units.BallSize + Units.PlayerSize) / 2)
 
-			if minDistanceToTouch <= float64(Units.PlayerMaxSpeed * frames){
+			if minDistanceToTouch <= float64(Units.PlayerMaxSpeed*frames) {
 				if frames > 1 {
 					return Units.PlayerMaxSpeed, *ballLocation
 				} else {
@@ -211,4 +201,11 @@ func (b *Brain) FindBestPointInterceptBall() (speed float64, target Physics.Poin
 		return Units.PlayerMaxSpeed, lastBallPosition
 	}
 }
-
+func (b *Brain) FindBestPointShootTheBall() (speed float64, target Physics.Point) {
+	goolkeeper := b.GetOpponentPlayer(b.LastMsg.GameInfo, BasicTypes.PlayerNumber("1"))
+	if goolkeeper.Coords.PosY > Units.CourtHeight / 2 {
+		return Units.BallMaxSpeed, b.OpponentGoal().BottomPole
+	} else {
+		return Units.BallMaxSpeed, b.OpponentGoal().TopPole
+	}
+}

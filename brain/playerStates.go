@@ -101,8 +101,14 @@ func (b *Brain) orderForAtckHoldHse() (msg string, orders []BasicTypes.Order) {
 func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
 	goalCoords := b.OpponentGoal().Center
 	goalDistance := b.Coords.DistanceTo(goalCoords)
-	if math.Abs(goalDistance) < Units.GoalZoneRange+Units.PlayerMaxSpeed {
-		return "Shoot!", []BasicTypes.Order{b.CreateKickOrder(goalCoords, Units.BallMaxSpeed)}
+	if goalDistance < strategy.RegionWidth * 1.5 {
+		nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 2)
+		obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
+		if len(obstacles) == 0 && goalDistance > Units.GoalZoneRange {
+			return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
+		}
+		speed, target := b.FindBestPointShootTheBall()
+		return "Shoot!", []BasicTypes.Order{b.CreateKickOrder(target, speed)}
 	} else {
 		return b.orderForAtckHoldHse()
 	}
@@ -305,91 +311,23 @@ func isPerfectPlace(coords Physics.Point, gameMessage Game.GameMessage, assisted
 	return thereIsOpponents == 0 && thereIsNoMate
 }
 
-//	if b.isItInMyActiveRegion(b.Coords) {
-//		switch b.calcDistanceScale(b.LastMsg.GameInfo.Ball.Coords) {
-//		case DISTANCE_SCALE_FAR:
-//			msg = "Supporting on attack"
-//			orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(b.LastMsg.GameInfo.Ball.Coords)}
-//		case DISTANCE_SCALE_NEAR:
-//			msg = "Helping on attack"
-//
-//			offensiveZone := Physics.NewVector(b.Coords, b.GetActiveRegionCenter())
-//			offensiveZone.Add(Physics.NewVector(b.Coords, b.OpponentGoal().Center))
-//			orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(offensiveZone.TargetFrom(b.Coords))}
-//		case DISTANCE_SCALE_GOOD:
-//			msg = "Holding positiong for attack"
-//			offensiveZone := Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords)
-//			offensiveZone.Add(Physics.NewVector(b.Coords, b.OpponentGoal().Center))
-//			orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(offensiveZone.TargetFrom(b.Coords))}
-//		}
-//	} else {
-//		regionCenter := b.GetActiveRegionCenter()
-//		return "Backing to my position", []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(regionCenter)}
-//	}
-//	return msg, orders
-//}
-
-//endregion Attack states
-
-//region Defending states
-
-//func (b *Brain) orderForDefdMyrgHse() (msg string, orders []BasicTypes.Order) {
-//	orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(b.LastMsg.GameInfo.Ball.Coords)}
-//	return "Running towards the ball", orders
-//}
-//
-//func (b *Brain) orderForDefdMyrgFrg() (msg string, orders []BasicTypes.Order) {
-//	switch b.calcDistanceScale(b.LastMsg.GameInfo.Ball.Coords) {
-//	case DISTANCE_SCALE_NEAR:
-//		// too close
-//		msg = "Pressing the player"
-//		orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(b.LastMsg.GameInfo.Ball.Coords)}
-//	case DISTANCE_SCALE_FAR:
-//		//get closer
-//		msg = "Back to my position!"
-//		var backOffPos Physics.Point
-//		region := b.GetActiveRegion()
-//		backOffPos = region.CentralDefense()
-//		orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(backOffPos)}
-//	case DISTANCE_SCALE_GOOD:
-//		msg = "Holding positiong"
-//	}
-//	//nothing more smart than that so far. stay stopped
-//	return msg, orders
-//}
-//
-//func (b *Brain) orderForDefdOtrgHse() (msg string, orders []BasicTypes.Order) {
-//
-//	if b.calcDistanceScale(b.LastMsg.GameInfo.Ball.Coords) == DISTANCE_SCALE_NEAR {
-//		msg = "Defensing while back off"
-//		backOffDir := Physics.NewVector(b.Coords, b.DefenseGoal().Center)
-//		backOffDir.Add(Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))
-//		orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(backOffDir.TargetFrom(b.Coords))}
-//	} else {
-//		msg = "Back off!"
-//		backOffDir := Physics.NewVector(b.Coords, b.DefenseGoal().Center)
-//		backOffDir.Add(Physics.NewVector(b.Coords, b.GetActiveRegionCenter()))
-//		orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(backOffDir.TargetFrom(b.Coords))}
-//	}
-//	//nothing more smart than that so far. stay stopped
-//	return msg, orders
-//}
-//
-//func (b *Brain) orderForDefdOtrgFrg() (msg string, orders []BasicTypes.Order) {
-//	if b.calcDistanceScale(b.LastMsg.GameInfo.Ball.Coords) == DISTANCE_SCALE_NEAR {
-//		msg = "Defensing while back off"
-//		backOffDir := Physics.NewVector(b.Coords, b.DefenseGoal().Center)
-//		backOffDir.Add(Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))
-//		orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(backOffDir.TargetFrom(b.Coords))}
-//	} else {
-//		msg = "Back off!"
-//		backOffDir := Physics.NewVector(b.Coords, b.DefenseGoal().Center)
-//		backOffDir.Add(Physics.NewVector(b.Coords, b.GetActiveRegionCenter()))
-//		orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(backOffDir.TargetFrom(b.Coords))}
-//	}
-//	//nothing more smart than that so far. stay stopped
-//	return msg, orders
-//}
+func (b *Brain) orderForDefdOtrgFrg() (msg string, orders []BasicTypes.Order) {
+	if b.ShouldIDisputeForTheBall() {
+		speed, target := b.FindBestPointInterceptBall()
+		orders = []BasicTypes.Order{b.CreateMoveOrder(target, speed)}
+	} else {
+		target := b.GetActiveRegion(TeamState).Center(b.TeamPlace)
+		if b.Coords.DistanceTo(target) < Units.PlayerMaxSpeed {
+			if b.Velocity.Speed > 0 {
+				orders = []BasicTypes.Order{b.CreateStopOrder(*Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
+			}
+		} else {
+			orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(target)}
+		}
+	}
+	//nothing more smart than that so far. stay stopped
+	return msg, orders
+}
 
 //endregion Defending states
 

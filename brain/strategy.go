@@ -32,11 +32,11 @@ func (b *Brain) GetActiveRegionCenter(strategyState strategy.TeamState) Physics.
 func (b *Brain) DetermineMyTeamState(msg Game.GameMessage) strategy.TeamState {
 	ballRegionCode := strategy.GetRegionCode(msg.GameInfo.Ball.Coords, b.TeamPlace)
 	if TeamBallPossession != b.TeamPlace {
-		if ballRegionCode.X < 2 {
+		if ballRegionCode.X < 3 {
 			return strategy.UnderPressure
-		} else if ballRegionCode.X < 4 {
+		} else if ballRegionCode.X < 5 {
 			return strategy.Defensive
-		} else if ballRegionCode.X < 6 {
+		} else if ballRegionCode.X < 7 {
 			return strategy.Neutral
 		} else {
 			return strategy.Offensive
