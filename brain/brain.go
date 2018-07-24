@@ -103,10 +103,10 @@ func (b *Brain) TakeAnAction() {
 		msg, orders = b.orderForDsptFrblFrg()
 		orders = append(orders, b.CreateCatchOrder())
 
-	//case AtckHoldHse:
-	//	msg, orders = b.orderForAtckHoldHse()
-	//case AtckHoldFrg:
-	//	msg, orders = b.orderForAtckHoldFrg()
+	case AtckHoldHse:
+		msg, orders = b.orderForAtckHoldHse()
+	case AtckHoldFrg:
+		msg, orders = b.orderForAtckHoldFrg()
 	case AtckHelpHse:
 		msg, orders = b.orderForAtckHelpHse()
 	case AtckHelpFrg:

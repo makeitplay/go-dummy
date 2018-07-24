@@ -8,6 +8,7 @@ import (
 	"github.com/makeitplay/client-player-go/Game"
 	"github.com/makeitplay/go-dummy/strategy"
 	"sort"
+	"github.com/makeitplay/commons"
 )
 
 type PlayerState BasicTypes.State
@@ -40,6 +41,8 @@ const (
 	// disputing, far to the ball, foreign field
 	DsptFrblFrg PlayerState = "dsp-fbl-fr"
 )
+
+const PerfectPassDistance = Units.BallMaxSpeed - (Units.BallDeceleration/2)
 
 type DistanceScale string
 
@@ -93,17 +96,10 @@ func (b *Brain) orderForAtckHoldHse() (msg string, orders []BasicTypes.Order) {
 func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
 	goalCoords := b.OpponentGoal().Center
 	goalDistance := b.Coords.DistanceTo(goalCoords)
-	if math.Abs(goalDistance) < BallMaxSafePassDistance(Units.BallMaxSpeed) {
+	if math.Abs(goalDistance) < Units.GoalZoneRange + Units.PlayerMaxSpeed {
 		return "Shoot!", []BasicTypes.Order{b.CreateKickOrder(goalCoords, Units.BallMaxSpeed)}
 	} else {
-		nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 5)
-		obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
-
-		if len(obstacles) == 0 {
-			return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
-		} else {
-			return "I need help guys!", b.orderPassTheBall()
-		}
+		return b.orderForAtckHoldHse()
 	}
 }
 
@@ -406,54 +402,41 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 		if playerMate.ID() == b.ID() {
 			continue
 		}
-		//commons.LogWarning("Evaluating %s", playerMate.Number)
-
-
+		goalCenter := b.OpponentGoal().Center
 		obstaclesFromMe := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, playerMate.Coords)
-		obstaclesToGoal := watchOpponentOnMyRoute(b.LastMsg.GameInfo, playerMate, b.OpponentGoal().Center)
+		obstaclesToGoal := watchOpponentOnMyRoute(b.LastMsg.GameInfo, playerMate, goalCenter)
 		distanceFromMe := b.Coords.DistanceTo(playerMate.Coords)
-		distanceToGoal := playerMate.Coords.DistanceTo(b.OpponentGoal().Center)
+		distanceToGoal := playerMate.Coords.DistanceTo(goalCenter)
 
-		//commons.LogDebug("distanceFromMe %f", distanceFromMe)
-		//commons.LogDebug("distanceToGoal %f", distanceToGoal)
-
-		score := 0
+		score := 100
 		score -= len(obstaclesFromMe) * 10
-		//commons.LogDebug("obstaclesFromMe %d", len(obstaclesFromMe) )
-		if len(obstaclesToGoal) == 0 {
-			//commons.LogDebug("obstaclesToGoal %d", len(obstaclesToGoal))
+		if len(obstaclesToGoal) == 0 &&  distanceToGoal < Units.CourtWidth / 4 {
 			score += 40
-		//} else if obstaclesToGoal[0] > 3.0 * Units.PlayerMaxSpeed {
-		//	commons.LogDebug("obstaclesToGoal are further than 3 frames")
-			//score += 30
-		//} else if obstaclesToGoal[0] > 1.0 * Units.PlayerMaxSpeed {
-		//	commons.LogDebug("obstaclesToGoal are further than 1 frame")
-			//score += 10
+		} else if len(obstaclesToGoal) > 0 {
+			if obstaclesToGoal[0].DistanceTo(goalCenter) > 3.0 * Units.PlayerMaxSpeed {
+				commons.LogDebug("obstaclesToGoal are further than 3 frames")
+				score += 10
+			} else if obstaclesToGoal[0].DistanceTo(goalCenter) > 1.0 * Units.PlayerMaxSpeed {
+				commons.LogDebug("obstaclesToGoal are further than 1 frame")
+				score += 5
+			}
 		}
 
 		if distanceFromMe <= Units.BallMaxSpeed / 2 {
 			//commons.LogDebug("too close")
-			score -= 5
-		} else if distanceFromMe > Units.BallMaxSpeed {
-			//commons.LogDebug("too far")
 			score -= 10
+		} else if math.Abs(distanceFromMe - PerfectPassDistance) < Units.PlayerMaxSpeed {
+			score += 20
+		}else  if distanceFromMe <= strategy.RegionWidth { // trocar pela largura da Ragion
+			//commons.LogDebug("too far")
+			score += 10
 		}else {
 			//commons.LogDebug("great distance")
-			score += 20
+			score += 10
 		}
-		if distanceToGoal < Units.BallMaxSpeed {
-			//commons.LogDebug("awesome location")
-			score += 20
+		if bestScore != 0 && distanceToGoal < bestCandidate.Coords.DistanceTo(goalCenter) {
+			score += 10
 		}
-		//App.Log("=Player %s | %d obs, %d obs2, %d DfomMe, %d DfomGoal  = Total %d",
-		//	playerMate.Number,
-		//	len(obstaclesFromMe),
-		//	len(obstaclesToGoal),
-		//	int(distanceFromMe),
-		//	int(distanceToGoal),
-		//	score,
-		//	)
-		//commons.LogWarning("score candidate %v\n\n------------", score)
 		if score > bestScore {
 			bestScore = score
 			bestCandidate = playerMate
