@@ -9,6 +9,7 @@ import (
 	"github.com/makeitplay/commons/BasicTypes"
 	"github.com/makeitplay/go-dummy/strategy"
 	"fmt"
+	"github.com/makeitplay/commons/Physics"
 )
 
 // distance considered "near" for a player to the ball
@@ -169,5 +170,45 @@ func (b *Brain) ShouldIAssist() bool {
 		}
 	}
 	return true
+}
+func (b *Brain) FindBestPointInterceptBall() (speed float64, target Physics.Point) {
+	if b.LastMsg.GameInfo.Ball.Velocity.Speed == 0 {
+		return Units.PlayerMaxSpeed, b.LastMsg.GameInfo.Ball.Coords
+	} else {
+		calcBallPos := func(frame int) *Physics.Point {
+			//S = So + VT + (aT^2)/2
+			V := b.LastMsg.GameInfo.Ball.Velocity.Speed
+			T := float64(frame)
+			a := -Units.BallDeceleration
+			distance := V * T + ( a * math.Pow(T,2) )/2
+			if distance <= 0 {
+				return nil
+			}
+			ballTarget := b.LastMsg.GameInfo.Ball.Velocity.Direction.Copy().
+				SetLength(distance).
+				TargetFrom(b.LastMsg.GameInfo.Ball.Coords)
+			return &ballTarget
+		}
+		frames := 1
+		lastBallPosition := b.LastMsg.GameInfo.Ball.Coords
+		for {
+			ballLocation := calcBallPos(frames)
+			if ballLocation == nil {
+				break
+			}
+			minDistanceToTouch := ballLocation.DistanceTo(b.Coords) - ((Units.BallSize + Units.PlayerSize) / 2)
+
+			if minDistanceToTouch <= float64(Units.PlayerMaxSpeed * frames){
+				if frames > 1 {
+					return Units.PlayerMaxSpeed, *ballLocation
+				} else {
+					return b.Coords.DistanceTo(*ballLocation), *ballLocation
+				}
+			}
+			lastBallPosition = *ballLocation
+			frames++
+		}
+		return Units.PlayerMaxSpeed, lastBallPosition
+	}
 }
 
