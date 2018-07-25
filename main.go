@@ -4,11 +4,12 @@ import (
 	"time"
 	"os"
 	"os/signal"
-	"github.com/makeitplay/commons"
 	"math/rand"
+
+	"github.com/makeitplay/commons"
+	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/client-player-go/Game"
 	"github.com/makeitplay/go-dummy/brain"
-	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/go-dummy/strategy"
 )
 
@@ -21,9 +22,8 @@ func main() {
 	serverConfig.LoadCmdArg()
 	/**********************************************/
 
-
 	brain.MyRule = strategy.DefinePlayerRule(serverConfig.PlayerNumber)
-	brain.TeamBallPossession =  serverConfig.TeamPlace
+	brain.TeamBallPossession = serverConfig.TeamPlace
 
 	player := &Game.Player{}
 	playerBrain := &brain.Brain{Player: player}
@@ -34,7 +34,6 @@ func main() {
 	playerBrain.Player.OnAnnouncement = playerBrain.ProcessAnn
 	playerBrain.Start(serverConfig)
 }
-
 
 func watchInterruptions() {
 	signalChan := make(chan os.Signal, 1)

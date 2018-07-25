@@ -1,10 +1,10 @@
 package brain
 
 import (
+	"math"
 	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/commons/Physics"
 	"github.com/makeitplay/client-player-go/Game"
-	"math"
 )
 
 func BallMaxSafePassDistance(Speed float64) float64 {

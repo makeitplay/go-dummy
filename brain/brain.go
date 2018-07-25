@@ -1,15 +1,17 @@
 package brain
 
 import (
-	"github.com/makeitplay/client-player-go/Game"
+	"math"
+	"fmt"
+
 	"github.com/makeitplay/commons"
 	"github.com/makeitplay/commons/GameState"
-	"math"
 	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/commons/BasicTypes"
-	"github.com/makeitplay/go-dummy/strategy"
-	"fmt"
 	"github.com/makeitplay/commons/Physics"
+
+	"github.com/makeitplay/client-player-go/Game"
+	"github.com/makeitplay/go-dummy/strategy"
 )
 
 // distance considered "near" for a player to the ball

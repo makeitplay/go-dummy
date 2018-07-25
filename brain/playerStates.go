@@ -2,13 +2,14 @@ package brain
 
 import (
 	"math"
+	"sort"
+	"github.com/makeitplay/commons"
 	"github.com/makeitplay/commons/BasicTypes"
 	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/commons/Physics"
+
 	"github.com/makeitplay/client-player-go/Game"
 	"github.com/makeitplay/go-dummy/strategy"
-	"sort"
-	"github.com/makeitplay/commons"
 )
 
 type PlayerState BasicTypes.State
