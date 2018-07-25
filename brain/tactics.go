@@ -2,7 +2,7 @@ package brain
 
 import (
 	"github.com/makeitplay/commons/Physics"
-	"github.com/makeitplay/go-dummy/strategy"
+	"github.com/makeitplay/the-dummies-go/strategy"
 	"github.com/makeitplay/client-player-go/Game"
 )
 func (b *Brain) GetActiveRegion(state strategy.TeamState) strategy.RegionCode {

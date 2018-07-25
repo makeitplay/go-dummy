@@ -2,7 +2,7 @@ package brain
 
 import (
 	"testing"
-	"github.com/makeitplay/go-dummy/strategy"
+	"github.com/makeitplay/the-dummies-go/strategy"
 	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/client-player-go/Game"
 	"github.com/stretchr/testify/assert"

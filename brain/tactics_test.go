@@ -3,7 +3,7 @@ package brain
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/makeitplay/go-dummy/strategy"
+	"github.com/makeitplay/the-dummies-go/strategy"
 	"github.com/makeitplay/client-player-go/Game"
 	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/commons/Physics"

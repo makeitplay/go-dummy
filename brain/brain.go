@@ -11,7 +11,7 @@ import (
 	"github.com/makeitplay/commons/Physics"
 
 	"github.com/makeitplay/client-player-go/Game"
-	"github.com/makeitplay/go-dummy/strategy"
+	"github.com/makeitplay/the-dummies-go/strategy"
 )
 
 // distance considered "near" for a player to the ball

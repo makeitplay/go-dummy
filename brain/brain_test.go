@@ -4,7 +4,7 @@ import (
 	"testing"
 	"github.com/makeitplay/client-player-go/Game"
 	"github.com/makeitplay/commons/Units"
-	"github.com/makeitplay/go-dummy/strategy"
+	"github.com/makeitplay/the-dummies-go/strategy"
 	"github.com/stretchr/testify/assert"
 )
 
