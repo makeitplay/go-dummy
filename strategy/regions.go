@@ -5,6 +5,7 @@ import (
 	"github.com/makeitplay/commons/Units"
 	"math"
 )
+
 const RegionHeight = Units.CourtHeight / 4
 const RegionWidth = Units.CourtWidth / 8
 
@@ -18,10 +19,10 @@ type RegionCode struct {
 	Y int
 }
 
-func (r RegionCode) Center(place Units.TeamPlace) Physics.Point  {
+func (r RegionCode) Center(place Units.TeamPlace) Physics.Point {
 	center := Physics.Point{
-		PosX: (r.X * RegionWidth) + (RegionWidth/2),
-		PosY: (r.Y * RegionHeight) + (RegionHeight/2),
+		PosX: (r.X * RegionWidth) + (RegionWidth / 2),
+		PosY: (r.Y * RegionHeight) + (RegionHeight / 2),
 	}
 	if place == Units.AwayTeam {
 		center = MirrorCoordsToAway(center)
@@ -29,7 +30,7 @@ func (r RegionCode) Center(place Units.TeamPlace) Physics.Point  {
 	return center
 }
 
-func (r RegionCode) ForwardRightCorner(place Units.TeamPlace) Physics.Point  {
+func (r RegionCode) ForwardRightCorner(place Units.TeamPlace) Physics.Point {
 	fr := Physics.Point{
 		PosX: (r.X + 1) * RegionWidth,
 		PosY: r.Y * RegionHeight,
@@ -40,7 +41,7 @@ func (r RegionCode) ForwardRightCorner(place Units.TeamPlace) Physics.Point  {
 	return fr
 }
 
-func (r RegionCode) ForwardLeftCorner(place Units.TeamPlace) Physics.Point  {
+func (r RegionCode) ForwardLeftCorner(place Units.TeamPlace) Physics.Point {
 	fl := Physics.Point{
 		PosX: (r.X + 1) * RegionWidth,
 		PosY: (r.Y + 1) * RegionHeight,
@@ -51,7 +52,7 @@ func (r RegionCode) ForwardLeftCorner(place Units.TeamPlace) Physics.Point  {
 	return fl
 }
 
-func (r RegionCode) Forwards() RegionCode  {
+func (r RegionCode) Forwards() RegionCode {
 	if r.X == 7 {
 		return r
 	}
@@ -61,7 +62,7 @@ func (r RegionCode) Forwards() RegionCode  {
 	}
 }
 
-func (r RegionCode) Backwards() RegionCode  {
+func (r RegionCode) Backwards() RegionCode {
 	if r.X == 0 {
 		return r
 	}
@@ -71,7 +72,7 @@ func (r RegionCode) Backwards() RegionCode  {
 	}
 }
 
-func (r RegionCode) Left() RegionCode  {
+func (r RegionCode) Left() RegionCode {
 	if r.Y == 3 {
 		return r
 	}
@@ -81,7 +82,7 @@ func (r RegionCode) Left() RegionCode  {
 	}
 }
 
-func (r RegionCode) Right() RegionCode  {
+func (r RegionCode) Right() RegionCode {
 	if r.Y == 0 {
 		return r
 	}
@@ -93,12 +94,10 @@ func (r RegionCode) Right() RegionCode  {
 
 func (r RegionCode) ChessDistanceTo(b RegionCode) int {
 	return int(math.Max(
-		math.Abs(float64(r.X - b.X)),
-		math.Abs(float64(r.Y - b.Y)),
+		math.Abs(float64(r.X-b.X)),
+		math.Abs(float64(r.Y-b.Y)),
 	))
 }
-
-
 
 func GetRegionCode(a Physics.Point, place Units.TeamPlace) RegionCode {
 	if place == Units.AwayTeam {
@@ -111,7 +110,6 @@ func GetRegionCode(a Physics.Point, place Units.TeamPlace) RegionCode {
 		Y: int(math.Min(cy, 3)),
 	}
 }
-
 
 // Invert the coords X and Y as in a mirror to found out the same position seen from the away team field
 // Keep in mind that all coords in the field is based on the bottom left corner!

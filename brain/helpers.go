@@ -1,10 +1,10 @@
 package brain
 
 import (
-	"math"
-	"github.com/makeitplay/commons/Units"
+	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/commons/Physics"
-	"github.com/makeitplay/client-player-go/Game"
+	"github.com/makeitplay/commons/Units"
+	"math"
 )
 
 func BallMaxSafePassDistance(Speed float64) float64 {
@@ -23,7 +23,7 @@ func (s PointCollection) Swap(i, j int) {
 
 type SortByDistance struct {
 	PointCollection
-	From    Physics.Point
+	From Physics.Point
 }
 
 func (s SortByDistance) Less(i, j int) bool {
@@ -31,7 +31,7 @@ func (s SortByDistance) Less(i, j int) bool {
 }
 
 // watchOpponentOnMyRoute returns a list for obstacle between the player an it's target sorted by the distance to it
-func watchOpponentOnMyRoute(status Game.GameInfo, player *Game.Player, target Physics.Point) PointCollection {
+func watchOpponentOnMyRoute(status client.GameInfo, player *client.Player, target Physics.Point) PointCollection {
 	opponentTeam := player.GetOpponentTeam(status)
 	collisionPoints := SortByDistance{From: player.Coords}
 
@@ -50,7 +50,7 @@ func QuadraticResults(a, b, c float64) (float64, float64) {
 	// delta: B^2 -4.A.C
 	delta := math.Pow(b, 2) - 4*a*c
 	// quadratic formula: -b +/- sqrt(delta)/2a
-	t1 := (- b + math.Sqrt(delta)) / (2 * a)
-	t2 := (- b - math.Sqrt(delta)) / (2 * a)
+	t1 := (-b + math.Sqrt(delta)) / (2 * a)
+	t2 := (-b - math.Sqrt(delta)) / (2 * a)
 	return t1, t2
 }

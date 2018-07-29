@@ -1,14 +1,14 @@
 package main
 
 import (
-	"time"
+	"math/rand"
 	"os"
 	"os/signal"
-	"math/rand"
+	"time"
 
+	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/commons"
 	"github.com/makeitplay/commons/Units"
-	"github.com/makeitplay/client-player-go/Game"
 	"github.com/makeitplay/the-dummies-go/brain"
 	"github.com/makeitplay/the-dummies-go/strategy"
 )
@@ -17,15 +17,13 @@ func main() {
 	rand.Seed(time.Now().Unix())
 	watchInterruptions()
 	defer commons.Cleanup(false)
-	serverConfig := new(Game.Configuration)
-	commons.Load(serverConfig)
+	serverConfig := new(client.Configuration)
 	serverConfig.LoadCmdArg()
-	/**********************************************/
 
 	brain.MyRule = strategy.DefinePlayerRule(serverConfig.PlayerNumber)
 	brain.TeamBallPossession = serverConfig.TeamPlace
 
-	player := &Game.Player{}
+	player := &client.Player{}
 	playerBrain := &brain.Brain{Player: player}
 	playerBrain.TeamPlace = serverConfig.TeamPlace
 	playerBrain.Number = serverConfig.PlayerNumber

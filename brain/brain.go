@@ -1,16 +1,16 @@
 package brain
 
 import (
-	"math"
 	"fmt"
+	"math"
 
 	"github.com/makeitplay/commons"
-	"github.com/makeitplay/commons/GameState"
-	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/commons/BasicTypes"
+	"github.com/makeitplay/commons/GameState"
 	"github.com/makeitplay/commons/Physics"
+	"github.com/makeitplay/commons/Units"
 
-	"github.com/makeitplay/client-player-go/Game"
+	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/the-dummies-go/strategy"
 )
 
@@ -24,7 +24,7 @@ var TeamBallPossession Units.TeamPlace
 var MyRule strategy.PlayerRule
 
 type Brain struct {
-	*Game.Player
+	*client.Player
 	State PlayerState
 }
 
@@ -36,12 +36,12 @@ func (b *Brain) ResetPosition() {
 	b.Coords = region.Center(b.TeamPlace)
 }
 
-func (b *Brain) ProcessAnn(msg Game.GameMessage) {
+func (b *Brain) ProcessAnn(msg client.GameMessage) {
 	b.UpdatePosition(msg.GameInfo)
 	commons.LogBroadcast(string(msg.State))
 	switch GameState.State(msg.State) {
-	case GameState.GETREADY:
-	case GameState.LISTENING:
+	case GameState.GetReady:
+	case GameState.Listening:
 		if msg.GameInfo.Ball.Holder != nil {
 			TeamBallPossession = msg.GameInfo.Ball.Holder.TeamPlace
 		}
@@ -157,8 +157,7 @@ func (b *Brain) ShouldIAssist() bool {
 	holderId := b.LastMsg.GameInfo.Ball.Holder.ID()
 	playerCloser := 0
 	for _, player := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
-		if
-		player.ID() != holderId && // the holder cannot help himself
+		if player.ID() != holderId && // the holder cannot help himself
 			player.Number != b.Number && // I wont count to myself
 			strategy.DefinePlayerRule(player.Number) != holderRule && // I wont count with the players rule mates because they should ALWAYS help
 			player.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords) < myDistance {
@@ -212,17 +211,15 @@ func (b *Brain) FindBestPointInterceptBall() (speed float64, target Physics.Poin
 }
 func (b *Brain) FindBestPointShootTheBall() (speed float64, target Physics.Point) {
 	goalkeeper := b.GetOpponentPlayer(b.LastMsg.GameInfo, BasicTypes.PlayerNumber("1"))
-	if goalkeeper.Coords.PosY > Units.CourtHeight / 2 {
+	if goalkeeper.Coords.PosY > Units.CourtHeight/2 {
 		return Units.BallMaxSpeed, Physics.Point{
 			PosX: b.OpponentGoal().BottomPole.PosX,
 			PosY: b.OpponentGoal().BottomPole.PosY + Units.BallSize,
-
 		}
 	} else {
 		return Units.BallMaxSpeed, Physics.Point{
 			PosX: b.OpponentGoal().TopPole.PosX,
 			PosY: b.OpponentGoal().TopPole.PosY - Units.BallSize,
-
 		}
 	}
 }
@@ -236,9 +233,9 @@ func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 	myGoal := b.DefenseGoal()
 	longestDistance := Units.GoalWidth - Units.GoalKeeperJumpLength
 	//s = so + vt
-	t := float64(longestDistance / Units.PlayerMaxSpeed) + 1 //11
+	t := float64(longestDistance/Units.PlayerMaxSpeed) + 1 //11
 
-	distanceWatchBall := Units.BallMaxSpeed*t + float64(-Units.BallDeceleration/2) * math.Pow(t, 2)
+	distanceWatchBall := Units.BallMaxSpeed*t + float64(-Units.BallDeceleration/2)*math.Pow(t, 2)
 
 	if b.LastMsg.GameInfo.Ball.Coords.DistanceTo(myGoal.Center) <= distanceWatchBall {
 		distanceToTopPole := b.LastMsg.GameInfo.Ball.Coords.DistanceTo(myGoal.TopPole)
@@ -262,12 +259,12 @@ func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 		}
 		//the furthest safe place from the most risk side
 		//S = so + vt
-		maxDistanceICanRun := float64 (Units.PlayerMaxSpeed * frameToReact) + Units.GoalKeeperJumpLength
+		maxDistanceICanRun := float64(Units.PlayerMaxSpeed*frameToReact) + Units.GoalKeeperJumpLength
 		safePoint := Physics.NewVector(poleInRisk, myGoal.Center).SetLength(maxDistanceICanRun).TargetFrom(poleInRisk)
 		distanceToSafePoint := safePoint.DistanceTo(b.Coords)
 		if distanceToSafePoint > Units.PlayerMaxSpeed {
 			return "Run to best spot!", []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(safePoint)}
-		} else if distanceToSafePoint < 5 {//just a tolerance
+		} else if distanceToSafePoint < 5 { //just a tolerance
 			return "Be focused!!", []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
 		} else {
 			return "To center", []BasicTypes.Order{b.CreateMoveOrder(safePoint, distanceToSafePoint)}
@@ -277,7 +274,7 @@ func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 		distanceFromMiddle := b.Coords.DistanceTo(myGoal.Center)
 		if distanceFromMiddle > Units.PlayerMaxSpeed {
 			return "Back to position!", []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(myGoal.Center)}
-		} else if distanceFromMiddle < 5 {//just a tolerance
+		} else if distanceFromMiddle < 5 { //just a tolerance
 			return "Just watch the game!", []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
 		} else {
 			return "To center", []BasicTypes.Order{b.CreateMoveOrder(myGoal.Center, distanceFromMiddle)}

@@ -1,56 +1,56 @@
 package brain
 
 import (
-	"testing"
-	"github.com/makeitplay/the-dummies-go/strategy"
-	"github.com/makeitplay/commons/Units"
-	"github.com/makeitplay/client-player-go/Game"
-	"github.com/stretchr/testify/assert"
+	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/commons/BasicTypes"
+	"github.com/makeitplay/commons/Units"
+	"github.com/makeitplay/the-dummies-go/strategy"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-func MountGameInfo() Game.GameMessage {
-	fakeMsg := Game.GameMessage{}
-	fakeMsg.GameInfo.Ball = Game.Ball{}
+func MountGameInfo() client.GameMessage {
+	fakeMsg := client.GameMessage{}
+	fakeMsg.GameInfo.Ball = client.Ball{}
 	fakeMsg.GameInfo.Turn = 1
-	fakeMsg.GameInfo.AwayTeam = Game.Team{}
-	fakeMsg.GameInfo.HomeTeam  = Game.Team{}
+	fakeMsg.GameInfo.AwayTeam = client.Team{}
+	fakeMsg.GameInfo.HomeTeam = client.Team{}
 	return fakeMsg
 
 }
 
 func TestBrain_watchOpponentOnMyRoute(t *testing.T) {
-	msg := Game.GameMessage{}
-	msg.GameInfo = Game.GameInfo{}
-	msg.GameInfo.Ball = Game.Ball{}
+	msg := client.GameMessage{}
+	msg.GameInfo = client.GameInfo{}
+	msg.GameInfo.Ball = client.Ball{}
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{0, 0}.Center(Units.HomeTeam)
 
 	A := Brain{}
-	A.Player = new(Game.Player)
+	A.Player = new(client.Player)
 	A.Number = BasicTypes.PlayerNumber("1")
 	A.TeamPlace = Units.HomeTeam
 	A.Size = Units.PlayerSize
 
 	B := Brain{}
-	B.Player = new(Game.Player)
+	B.Player = new(client.Player)
 	B.Number = BasicTypes.PlayerNumber("1")
 	B.TeamPlace = Units.AwayTeam
 	B.Size = Units.PlayerSize
 
 	C := Brain{}
-	C.Player = new(Game.Player)
+	C.Player = new(client.Player)
 	C.Number = BasicTypes.PlayerNumber("2")
 	C.TeamPlace = Units.AwayTeam
 	C.Size = Units.PlayerSize
 
 	D := Brain{}
-	D.Player = new(Game.Player)
+	D.Player = new(client.Player)
 	D.Number = BasicTypes.PlayerNumber("3")
 	D.TeamPlace = Units.AwayTeam
 	D.Size = Units.PlayerSize
 
-	msg.GameInfo.HomeTeam.Players = []*Game.Player{}
-	msg.GameInfo.AwayTeam.Players = []*Game.Player{}
+	msg.GameInfo.HomeTeam.Players = []*client.Player{}
+	msg.GameInfo.AwayTeam.Players = []*client.Player{}
 
 	msg.GameInfo.HomeTeam.Players = append(msg.GameInfo.HomeTeam.Players, A.Player)
 	msg.GameInfo.AwayTeam.Players = append(msg.GameInfo.AwayTeam.Players, B.Player)
@@ -82,4 +82,3 @@ func TestBrain_watchOpponentOnMyRoute(t *testing.T) {
 	obstacles = watchOpponentOnMyRoute(msg.GameInfo, A.Player, target)
 	assert.Len(t, obstacles, 0)
 }
-

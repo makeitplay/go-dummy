@@ -1,15 +1,16 @@
 package brain
 
 import (
+	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/commons/Physics"
 	"github.com/makeitplay/the-dummies-go/strategy"
-	"github.com/makeitplay/client-player-go/Game"
 )
+
 func (b *Brain) GetActiveRegion(state strategy.TeamState) strategy.RegionCode {
 	return strategy.PlayerRegionMap[b.Number][state]
 }
 func (b *Brain) myCurrentRegion() strategy.RegionCode {
-	return strategy.GetRegionCode(b.Coords,  b.TeamPlace)
+	return strategy.GetRegionCode(b.Coords, b.TeamPlace)
 }
 
 func (b *Brain) isItInMyActiveRegion(coords Physics.Point, strategyState strategy.TeamState) bool {
@@ -29,7 +30,7 @@ func (b *Brain) GetActiveRegionCenter(strategyState strategy.TeamState) Physics.
 	return myRegionCode.Center(b.TeamPlace)
 }
 
-func (b *Brain) DetermineMyTeamState(msg Game.GameMessage) strategy.TeamState {
+func (b *Brain) DetermineMyTeamState(msg client.GameMessage) strategy.TeamState {
 	ballRegionCode := strategy.GetRegionCode(msg.GameInfo.Ball.Coords, b.TeamPlace)
 	if TeamBallPossession != b.TeamPlace {
 		if ballRegionCode.X < 3 {
@@ -54,8 +55,8 @@ func (b *Brain) DetermineMyTeamState(msg Game.GameMessage) strategy.TeamState {
 	}
 }
 
-func (b *Brain) GetPlayersInRegion(regionCode strategy.RegionCode, team Game.Team) []*Game.Player {
-	var playerList []*Game.Player
+func (b *Brain) GetPlayersInRegion(regionCode strategy.RegionCode, team client.Team) []*client.Player {
+	var playerList []*client.Player
 	for _, player := range team.Players {
 		if b.ID() != player.ID() && strategy.GetRegionCode(player.Coords, b.TeamPlace) == regionCode {
 			playerList = append(playerList, player)

@@ -1,14 +1,14 @@
 package brain
 
 import (
-	"math"
-	"sort"
 	"github.com/makeitplay/commons"
 	"github.com/makeitplay/commons/BasicTypes"
-	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/commons/Physics"
+	"github.com/makeitplay/commons/Units"
+	"math"
+	"sort"
 
-	"github.com/makeitplay/client-player-go/Game"
+	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/the-dummies-go/strategy"
 )
 
@@ -102,7 +102,7 @@ func (b *Brain) orderForAtckHoldHse() (msg string, orders []BasicTypes.Order) {
 func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
 	goalCoords := b.OpponentGoal().Center
 	goalDistance := b.Coords.DistanceTo(goalCoords)
-	if goalDistance < strategy.RegionWidth * 1.5 {
+	if goalDistance < strategy.RegionWidth*1.5 {
 		nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 2)
 		obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
 		if len(obstacles) == 0 && goalDistance > Units.GoalZoneRange {
@@ -166,7 +166,7 @@ func (b *Brain) orderForAtckHelpFrg() (msg string, orders []BasicTypes.Order) {
 	}
 	return msg, orders
 }
-func FindBestPointInRegionToAssist(gameMessage Game.GameMessage, region strategy.RegionCode, assisted *Game.Player, ) (target Physics.Point) {
+func FindBestPointInRegionToAssist(gameMessage client.GameMessage, region strategy.RegionCode, assisted *client.Player) (target Physics.Point) {
 	centerPoint := region.Center(assisted.TeamPlace)
 	vctToCenter := Physics.NewVector(assisted.Coords, centerPoint).SetLength(strategy.RegionWidth)
 	obstacles := watchOpponentOnMyRoute(gameMessage.GameInfo, assisted, vctToCenter.TargetFrom(assisted.Coords))
@@ -201,7 +201,7 @@ func FindBestPointInRegionToAssist(gameMessage Game.GameMessage, region strategy
 
 }
 
-func FindSpotToAssist(gameMessage Game.GameMessage, assisted *Game.Player, assistant *Brain, offensively bool) strategy.RegionCode {
+func FindSpotToAssist(gameMessage client.GameMessage, assisted *client.Player, assistant *Brain, offensively bool) strategy.RegionCode {
 	var availableSpots []strategy.RegionCode
 	var spotList []strategy.RegionCode
 	if offensively {
@@ -252,7 +252,7 @@ func FindSpotToAssist(gameMessage Game.GameMessage, assisted *Game.Player, assis
 	}
 	return assistant.GetActiveRegion(TeamState)
 }
-func ListSpotsCandidatesToOffensiveAssistance(assisted *Game.Player, assistant *Brain) []strategy.RegionCode {
+func ListSpotsCandidatesToOffensiveAssistance(assisted *client.Player, assistant *Brain) []strategy.RegionCode {
 	spotCollection := []strategy.RegionCode{}
 	currentRegion := strategy.GetRegionCode(assisted.Coords, assistant.TeamPlace)
 
@@ -282,7 +282,7 @@ func ListSpotsCandidatesToOffensiveAssistance(assisted *Game.Player, assistant *
 	}
 	return spotCollection
 }
-func ListSpotsCandidatesToDefensiveAssistance(assisted *Game.Player, assistant *Brain) []strategy.RegionCode {
+func ListSpotsCandidatesToDefensiveAssistance(assisted *client.Player, assistant *Brain) []strategy.RegionCode {
 	spotCollection := []strategy.RegionCode{}
 	currentRegion := strategy.GetRegionCode(assisted.Coords, assistant.TeamPlace)
 
@@ -303,7 +303,7 @@ func ListSpotsCandidatesToDefensiveAssistance(assisted *Game.Player, assistant *
 	return spotCollection
 }
 
-func isPerfectPlace(coords Physics.Point, gameMessage Game.GameMessage, assisted *Game.Player, assistant *Brain) bool {
+func isPerfectPlace(coords Physics.Point, gameMessage client.GameMessage, assisted *client.Player, assistant *Brain) bool {
 	obstacles := watchOpponentOnMyRoute(gameMessage.GameInfo, assisted, coords)
 	bestPlaceRegion := strategy.GetRegionCode(coords, assistant.TeamPlace)
 
@@ -338,7 +338,7 @@ func (b *Brain) orderAdvance() BasicTypes.Order {
 }
 
 func (b *Brain) orderPassTheBall() []BasicTypes.Order {
-	bestCandidate := new(Game.Player)
+	bestCandidate := new(client.Player)
 	bestScore := 0
 	for _, playerMate := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
 		if playerMate.ID() == b.ID() {
@@ -407,7 +407,7 @@ func (b *Brain) BestSpeedToTarget(target Physics.Point) float64 {
 	delta := math.Pow(B, 2) - 4*A*C
 
 	// quadratic formula: -b +/- sqrt(delta)/2a
-	t1 := (- B + math.Sqrt(delta)) / (2 * A)
+	t1 := (-B + math.Sqrt(delta)) / (2 * A)
 	if math.IsNaN(t1) { // target too far
 		return Units.BallMaxSpeed
 	}
