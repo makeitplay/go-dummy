@@ -1,0 +1,20 @@
+
+### Run for developing
+
+0. docker run -p 8080:8080 makeitplay/football:1.0.0-alpha
+0. go run main.go -team=away -number=1 -wshost=[you host machine IP]
+0. ./play.sh [you host machine IP]
+
+0. docker run -p 8080:8080 makeitplay/football:1.0.0-alpha
+0. docker build -t the-dummies .
+0. docker run the-dummies -team=away -number=1 -wshost=[you host machine IP]
+0. play-containers.sh [you host machine IP]
+
+### Run for deploy
+
+docker build -t the-dummies .
+HOME_IMAGE=the-dummies AWAY_IMAGE=the-dummies docker-compose up
+HOME_IMAGE=the-dummies AWAY_IMAGE=the-dummies docker-compose build --no-cache
+
+
+HOME_IMAGE=the-dummies AWAY_IMAGE=the-dummies docker-compose rm -f

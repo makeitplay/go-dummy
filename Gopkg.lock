@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/makeitplay/client-player-go"
   packages = ["Game"]
-  revision = "fca87f40499126ff468b0a9317b56dd968030eca"
+  revision = "6ccb79e64ff1e89a1db86508f78909d879d3f5d6"
 
 [[projects]]
   branch = "master"
@@ -72,7 +72,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "e072cadbbdc8dd3d3ffa82b8b4b9304c261d9311"
+  revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
 
 [solve-meta]
   analyzer-name = "dep"
