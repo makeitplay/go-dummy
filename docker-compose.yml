@@ -29,154 +29,154 @@ services:
     ports:
       - "8080:8080"
   player_home_01:
-    image: ${HOME_IMAGE}
+    image: ${HOME_TEAM}
     command:  -team=home -number=1 -wshost=game_server
     networks:
       - home_01
     depends_on:
       - game_server
   player_home_02:
-    image: ${HOME_IMAGE}
+    image: ${HOME_TEAM}
     command:  -team=home -number=2 -wshost=game_server
     networks:
       - home_02
     depends_on:
       - game_server
   player_home_03:
-    image: ${HOME_IMAGE}
+    image: ${HOME_TEAM}
     command:  -team=home -number=3 -wshost=game_server
     networks:
       - home_03
     depends_on:
       - game_server
   player_home_04:
-    image: ${HOME_IMAGE}
+    image: ${HOME_TEAM}
     command:  -team=home -number=4 -wshost=game_server
     networks:
       - home_04
     depends_on:
       - game_server
   player_home_05:
-    image: ${HOME_IMAGE}
+    image: ${HOME_TEAM}
     command:  -team=home -number=5 -wshost=game_server
     networks:
       - home_05
     depends_on:
       - game_server
   player_home_06:
-    image: ${HOME_IMAGE}
+    image: ${HOME_TEAM}
     command:  -team=home -number=6 -wshost=game_server
     networks:
       - home_06
     depends_on:
       - game_server
   player_home_07:
-    image: ${HOME_IMAGE}
+    image: ${HOME_TEAM}
     command:  -team=home -number=7 -wshost=game_server
     networks:
       - home_07
     depends_on:
       - game_server
   player_home_08:
-    image: ${HOME_IMAGE}
+    image: ${HOME_TEAM}
     command:  -team=home -number=8 -wshost=game_server
     networks:
       - home_08
     depends_on:
       - game_server
   player_home_09:
-    image: ${HOME_IMAGE}
+    image: ${HOME_TEAM}
     command:  -team=home -number=9 -wshost=game_server
     networks:
       - home_09
     depends_on:
       - game_server
   player_home_10:
-    image: ${HOME_IMAGE}
+    image: ${HOME_TEAM}
     command:  -team=home -number=10 -wshost=game_server
     networks:
       - home_10
     depends_on:
       - game_server
   player_home_11:
-    image: ${HOME_IMAGE}
+    image: ${HOME_TEAM}
     command:  -team=home -number=11 -wshost=game_server
     networks:
       - home_11
     depends_on:
       - game_server
   player_away_01:
-    image: ${AWAY_IMAGE}
+    image: ${AWAY_TEAM}
     command:  -team=away -number=1 -wshost=game_server
     networks:
       - away_01
     depends_on:
       - game_server
   player_away_02:
-    image: ${AWAY_IMAGE}
+    image: ${AWAY_TEAM}
     command:  -team=away -number=2 -wshost=game_server
     networks:
       - away_02
     depends_on:
       - game_server
   player_away_03:
-    image: ${AWAY_IMAGE}
+    image: ${AWAY_TEAM}
     command:  -team=away -number=3 -wshost=game_server
     networks:
       - away_03
     depends_on:
       - game_server
   player_away_04:
-    image: ${AWAY_IMAGE}
+    image: ${AWAY_TEAM}
     command:  -team=away -number=4 -wshost=game_server
     networks:
       - away_04
     depends_on:
       - game_server
   player_away_05:
-    image: ${AWAY_IMAGE}
+    image: ${AWAY_TEAM}
     command:  -team=away -number=5 -wshost=game_server
     networks:
       - away_05
     depends_on:
       - game_server
   player_away_06:
-    image: ${AWAY_IMAGE}
+    image: ${AWAY_TEAM}
     command:  -team=away -number=6 -wshost=game_server
     networks:
       - away_06
     depends_on:
       - game_server
   player_away_07:
-    image: ${AWAY_IMAGE}
+    image: ${AWAY_TEAM}
     command:  -team=away -number=7 -wshost=game_server
     networks:
       - away_07
     depends_on:
       - game_server
   player_away_08:
-    image: ${AWAY_IMAGE}
+    image: ${AWAY_TEAM}
     command:  -team=away -number=8 -wshost=game_server
     networks:
       - away_08
     depends_on:
       - game_server
   player_away_09:
-    image: ${AWAY_IMAGE}
+    image: ${AWAY_TEAM}
     command:  -team=away -number=9 -wshost=game_server
     networks:
       - away_09
     depends_on:
       - game_server
   player_away_10:
-    image: ${AWAY_IMAGE}
+    image: ${AWAY_TEAM}
     command:  -team=away -number=10 -wshost=game_server
     networks:
       - away_10
     depends_on:
       - game_server
   player_away_11:
-    image: ${AWAY_IMAGE}
+    image: ${AWAY_TEAM}
     command:  -team=away -number=11 -wshost=game_server
     networks:
       - away_11

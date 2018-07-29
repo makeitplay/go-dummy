@@ -8,7 +8,6 @@ import (
 
 	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/commons"
-	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/the-dummies-go/brain"
 	"github.com/makeitplay/the-dummies-go/strategy"
 )
@@ -27,7 +26,6 @@ func main() {
 	playerBrain := &brain.Brain{Player: player}
 	playerBrain.TeamPlace = serverConfig.TeamPlace
 	playerBrain.Number = serverConfig.PlayerNumber
-	playerBrain.Size = Units.PlayerSize
 	playerBrain.ResetPosition()
 	playerBrain.Player.OnAnnouncement = playerBrain.ProcessAnn
 	playerBrain.Start(serverConfig)
