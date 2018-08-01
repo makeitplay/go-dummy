@@ -2,6 +2,7 @@ version: '3.4'
 services:
   game_server:
     image: makeitplay/football:1.0.0-alpha
+    command:  -DebugMode
     networks:
       - home_01
       - home_02
