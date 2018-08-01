@@ -38,7 +38,7 @@ func TestBrain_orderForAtckHelpFrg(t *testing.T) {
 	assert.Equal(t, "", msg)
 	assert.Equal(t, string(strategy.Offensive), string(TeamState))
 	assert.Len(t, order, 1)
-	assert.Len(t, order[0], 1)
+	assert.Equal(t, order[0].Type, BasicTypes.MOVE)
 }
 
 func TestBrain_BestSpeedToTarget(t *testing.T) {

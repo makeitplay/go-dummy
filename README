@@ -6,14 +6,14 @@
 0. ./play.sh [you host machine IP]
 
 0. docker run -p 8080:8080 makeitplay/football:1.0.0-alpha
-0. docker build -t the-dummies .
+0. docker build -t the-dummies . --force-rm --no-cache
 0. docker run the-dummies -team=away -number=1 -wshost=[you host machine IP]
 0. play-containers.sh [you host machine IP]
 
 ### Run for deploy
 
 docker build -t the-dummies . --no-cache
-HOME_TEAM=the-dummies AWAY_TEAM=the-dummies docker-compose up
+HOME_TEAM=the-dummies AWAY_TEAM=the-dummies docker-compose up  --force-recreate
 HOME_TEAM=the-dummies AWAY_TEAM=the-dummies docker-compose build --no-cache
 
 

@@ -97,11 +97,6 @@ func (b *Brain) orderForPassiveSupport() (msg string, orders []BasicTypes.Order)
 }
 
 func (b *Brain) orderForSupporting() (msg string, orders []BasicTypes.Order) {
-	//if MyRule == strategy.DefensePlayer || !b.ShouldIAssist() { // middle players will give support
-	//	return b.orderForPassiveSupport()
-	//} else {
-	//	return b.orderForActiveSupport()
-	//}
 	if b.ShouldIAssist() { // middle players will give support
 		return b.orderForActiveSupport()
 	}

@@ -95,7 +95,7 @@ func TestDetermineMyTeamState_NoBall(t *testing.T) {
 	assert.Equal(t, strategy.OnAttack, awayPlayer.DetermineMyTeamState(msg))
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{2, 1}.Center(Units.HomeTeam)
-	assert.Equal(t, strategy.Defensive, homePlayer.DetermineMyTeamState(msg))
+	assert.Equal(t, strategy.UnderPressure, homePlayer.DetermineMyTeamState(msg))
 	assert.Equal(t, strategy.Offensive, awayPlayer.DetermineMyTeamState(msg))
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{3, 1}.Center(Units.HomeTeam)
@@ -103,7 +103,7 @@ func TestDetermineMyTeamState_NoBall(t *testing.T) {
 	assert.Equal(t, strategy.Offensive, awayPlayer.DetermineMyTeamState(msg))
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{4, 1}.Center(Units.HomeTeam)
-	assert.Equal(t, strategy.Neutral, homePlayer.DetermineMyTeamState(msg))
+	assert.Equal(t, strategy.Defensive, homePlayer.DetermineMyTeamState(msg))
 	assert.Equal(t, strategy.Neutral, awayPlayer.DetermineMyTeamState(msg))
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{5, 1}.Center(Units.HomeTeam)
@@ -111,7 +111,7 @@ func TestDetermineMyTeamState_NoBall(t *testing.T) {
 	assert.Equal(t, strategy.Neutral, awayPlayer.DetermineMyTeamState(msg))
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{6, 1}.Center(Units.HomeTeam)
-	assert.Equal(t, strategy.Offensive, homePlayer.DetermineMyTeamState(msg))
+	assert.Equal(t, strategy.Neutral, homePlayer.DetermineMyTeamState(msg))
 	assert.Equal(t, strategy.Defensive, awayPlayer.DetermineMyTeamState(msg))
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{7, 1}.Center(Units.HomeTeam)
@@ -129,7 +129,7 @@ func TestDetermineMyTeamState_NoBall(t *testing.T) {
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{2, 1}.Center(Units.AwayTeam)
 	assert.Equal(t, strategy.Offensive, homePlayer.DetermineMyTeamState(msg))
-	assert.Equal(t, strategy.Defensive, awayPlayer.DetermineMyTeamState(msg))
+	assert.Equal(t, strategy.UnderPressure, awayPlayer.DetermineMyTeamState(msg))
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{3, 1}.Center(Units.AwayTeam)
 	assert.Equal(t, strategy.Offensive, homePlayer.DetermineMyTeamState(msg))
@@ -137,7 +137,7 @@ func TestDetermineMyTeamState_NoBall(t *testing.T) {
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{4, 1}.Center(Units.AwayTeam)
 	assert.Equal(t, strategy.Neutral, homePlayer.DetermineMyTeamState(msg))
-	assert.Equal(t, strategy.Neutral, awayPlayer.DetermineMyTeamState(msg))
+	assert.Equal(t, strategy.Defensive, awayPlayer.DetermineMyTeamState(msg))
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{5, 1}.Center(Units.AwayTeam)
 	assert.Equal(t, strategy.Neutral, homePlayer.DetermineMyTeamState(msg))
@@ -145,7 +145,7 @@ func TestDetermineMyTeamState_NoBall(t *testing.T) {
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{6, 1}.Center(Units.AwayTeam)
 	assert.Equal(t, strategy.Defensive, homePlayer.DetermineMyTeamState(msg))
-	assert.Equal(t, strategy.Offensive, awayPlayer.DetermineMyTeamState(msg))
+	assert.Equal(t, strategy.Neutral, awayPlayer.DetermineMyTeamState(msg))
 
 	msg.GameInfo.Ball.Coords = strategy.RegionCode{7, 1}.Center(Units.AwayTeam)
 	assert.Equal(t, strategy.Defensive, homePlayer.DetermineMyTeamState(msg))

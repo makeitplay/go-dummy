@@ -3,13 +3,8 @@ package brain
 import (
 	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/commons/Physics"
-	"github.com/makeitplay/commons/Units"
 	"math"
 )
-
-func BallMaxSafePassDistance(Speed float64) float64 {
-	return Speed + (Units.BallDeceleration)/2
-}
 
 type PointCollection []Physics.Point
 

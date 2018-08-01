@@ -17,19 +17,19 @@ func TestBrain_ShouldIDisputeForTheBall(t *testing.T) {
 	aldair := Brain{}
 	aldair.Player = new(client.Player)
 	aldair.TeamPlace = Units.HomeTeam
-	aldair.Number = "aldair"
+	aldair.Number = "7"
 	aldair.Coords = (strategy.RegionCode{1, 1}).Center(Units.HomeTeam)
 
 	bebeto := Brain{}
 	bebeto.Player = new(client.Player)
-	bebeto.Number = "bebeto"
+	bebeto.Number = "8"
 	bebeto.TeamPlace = Units.HomeTeam
 	bebeto.Coords = (strategy.RegionCode{0, 2}).Center(Units.HomeTeam)
 
 	ronaldo := Brain{}
 	ronaldo.Player = new(client.Player)
 	ronaldo.TeamPlace = Units.HomeTeam
-	ronaldo.Number = "ronaldo"
+	ronaldo.Number = "9"
 	ronaldo.Coords = (strategy.RegionCode{2, 0}).Center(Units.HomeTeam)
 
 	msg.GameInfo.HomeTeam.Players = []*client.Player{}
