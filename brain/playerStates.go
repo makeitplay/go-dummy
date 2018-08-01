@@ -10,21 +10,24 @@ import (
 	"math"
 )
 
+// PlayerState defines states specific for players
 type PlayerState BasicTypes.State
 
 const (
+	// Supporting identifies the player supporting the team mate
 	Supporting PlayerState = "supporting"
-
+	// HoldingTheBall identifies the player holding	the ball
 	HoldingTheBall PlayerState = "holding"
-
+	// Defending identifies the player defending against the opponent team
 	Defending PlayerState = "defending"
-
-	// disputing the ball
+	// DisputingTheBall identifies the player disputing the ball
 	DisputingTheBall PlayerState = "disputing"
 )
 
+// PerfectPassDistance stores the constant distance where the ball reach in max speed after 1 frame
 const PerfectPassDistance = float64(Units.BallMaxSpeed - (Units.BallDeceleration / 2))
 
+// orderForDisputingTheBall returns a debug msg and a list of order for the DisputingTheBall state
 func (b *Brain) orderForDisputingTheBall() (msg string, orders []BasicTypes.Order) {
 	if b.ShouldIDisputeForTheBall() {
 		msg = "Disputing for the ball"
@@ -41,6 +44,7 @@ func (b *Brain) orderForDisputingTheBall() (msg string, orders []BasicTypes.Orde
 	}
 }
 
+// orderForSupporting returns a debug msg and a list of order for the Supporting state
 func (b *Brain) orderForSupporting() (msg string, orders []BasicTypes.Order) {
 	if b.ShouldIAssist() { // middle players will give support
 		return b.orderForActiveSupport()
@@ -48,6 +52,7 @@ func (b *Brain) orderForSupporting() (msg string, orders []BasicTypes.Order) {
 	return b.orderForPassiveSupport()
 }
 
+// orderForPassiveSupport returns a debug msg and a list of order for the Support state when the player is only holding position
 func (b *Brain) orderForPassiveSupport() (msg string, orders []BasicTypes.Order) {
 	var region strategy.RegionCode
 	if b.ShouldIAssist() {
@@ -71,6 +76,7 @@ func (b *Brain) orderForPassiveSupport() (msg string, orders []BasicTypes.Order)
 	return msg, orders
 }
 
+// orderForActiveSupport returns a debug msg and a list of order for the Support state when the player is assisting the ball holder
 func (b *Brain) orderForActiveSupport() (msg string, orders []BasicTypes.Order) {
 	bestCandidateRegion := FindSpotToAssist(
 		b.LastMsg,
@@ -93,6 +99,7 @@ func (b *Brain) orderForActiveSupport() (msg string, orders []BasicTypes.Order) 
 	return "", orders
 }
 
+// orderForHoldingTheBall returns a debug msg and a list of order for the HoldingTheBall state
 func (b *Brain) orderForHoldingTheBall() (msg string, orders []BasicTypes.Order) {
 	goalCoords := b.OpponentGoal().Center
 	goalDistance := b.Coords.DistanceTo(goalCoords)
@@ -118,6 +125,7 @@ func (b *Brain) orderForHoldingTheBall() (msg string, orders []BasicTypes.Order)
 	}
 }
 
+// orderForDefending returns a debug msg and a list of order for the Defending state
 func (b *Brain) orderForDefending() (msg string, orders []BasicTypes.Order) {
 	if b.ShouldIDisputeForTheBall() {
 		speed, target := b.FindBestPointInterceptBall()
@@ -136,6 +144,7 @@ func (b *Brain) orderForDefending() (msg string, orders []BasicTypes.Order) {
 	return msg, orders
 }
 
+// orderForGoalkeeper returns a debug msg and a list of order for the Goalkeeper state
 func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 	//V = Vo + at -> t = Vo/a
 	//framesToStop := Units.BallMaxSpeed/Units.BallDeceleration
@@ -195,10 +204,13 @@ func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 }
 
 //region helpers
+
+//orderAdvance creates a move order towards the goal
 func (b *Brain) orderAdvance() BasicTypes.Order {
 	return b.CreateMoveOrderMaxSpeed(b.OpponentGoal().Center)
 }
 
+//orderPassTheBall estimates the best team mate for receiving a ball and creates a order to pass the ball to him
 func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 	bestCandidate := new(client.Player)
 	bestScore := 0
@@ -227,7 +239,6 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 		}
 
 		if distanceFromMe <= Units.BallMaxSpeed/2 {
-			//commons.LogDebug("too close")
 			score -= 10
 		} else if math.Abs(distanceFromMe-PerfectPassDistance) < Units.PlayerMaxSpeed {
 			score += 20
@@ -235,7 +246,6 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 			//commons.LogDebug("too far")
 			score += 10
 		} else {
-			//commons.LogDebug("great distance")
 			score += 10
 		}
 		if bestScore != 0 && distanceToGoal < bestCandidate.Coords.DistanceTo(goalCenter) {
@@ -246,7 +256,6 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 			bestCandidate = playerMate
 		}
 	}
-	//commons.LogWarning("Best candidate %s", bestCandidate.Number)
 	bastSpeed := b.BestSpeedToTarget(bestCandidate.Coords)
 
 	return []BasicTypes.Order{
@@ -255,6 +264,7 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 	}
 }
 
+//BestSpeedToTarget calculates the best speed to reach a specific point with the ball
 func (b *Brain) BestSpeedToTarget(target Physics.Point) float64 {
 	distance := b.LastMsg.GameInfo.Ball.Coords.DistanceTo(target)
 	ballSpeed := Units.BallMaxSpeed

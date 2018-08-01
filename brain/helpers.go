@@ -8,23 +8,19 @@ import (
 	"sort"
 )
 
+// PointCollection creates a list of points
 type PointCollection []Physics.Point
 
-func (s PointCollection) Len() int {
-	return len(s)
-}
-
+// Len implements the
 func (s PointCollection) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
+// SortByDistance allows to sort a list of points
+// @todo this struct may be removed if we use the sort.Slice function
 type SortByDistance struct {
 	PointCollection
 	From Physics.Point
-}
-
-func (s SortByDistance) Less(i, j int) bool {
-	return s.From.DistanceTo(s.PointCollection[i]) < s.From.DistanceTo(s.PointCollection[j])
 }
 
 // watchOpponentOnMyRoute returns a list for obstacle between the player an it's target sorted by the distance to it
@@ -43,6 +39,7 @@ func watchOpponentOnMyRoute(status client.GameInfo, player *client.Player, targe
 	return collisionPoints.PointCollection
 }
 
+// QuadraticResults resolves a quadratic function returning the x1 and x2
 func QuadraticResults(a, b, c float64) (float64, float64) {
 	// delta: B^2 -4.A.C
 	delta := math.Pow(b, 2) - 4*a*c
@@ -52,6 +49,7 @@ func QuadraticResults(a, b, c float64) (float64, float64) {
 	return t1, t2
 }
 
+// FindBestPointInRegionToAssist finds the best point to support the ball holder from within a region
 func FindBestPointInRegionToAssist(gameMessage client.GameMessage, region strategy.RegionCode, assisted *client.Player) (target Physics.Point) {
 	centerPoint := region.Center(assisted.TeamPlace)
 	vctToCenter := Physics.NewVector(assisted.Coords, centerPoint).SetLength(strategy.RegionWidth)
@@ -85,6 +83,7 @@ func FindBestPointInRegionToAssist(gameMessage client.GameMessage, region strate
 	return
 }
 
+// FindSpotToAssist finds a good region to support the ball holder
 func FindSpotToAssist(gameMessage client.GameMessage, assisted *client.Player, assistant *Brain, offensively bool) strategy.RegionCode {
 	var availableSpots []strategy.RegionCode
 	var spotList []strategy.RegionCode
@@ -136,6 +135,8 @@ func FindSpotToAssist(gameMessage client.GameMessage, assisted *client.Player, a
 	}
 	return assistant.GetActiveRegion(TeamState)
 }
+
+// ListSpotsCandidatesToOffensiveAssistance List the best regions around the ball holder to help him in a offensive support (closer to the attack)
 func ListSpotsCandidatesToOffensiveAssistance(assisted *client.Player, assistant *Brain) []strategy.RegionCode {
 	spotCollection := []strategy.RegionCode{}
 	currentRegion := strategy.GetRegionCode(assisted.Coords, assistant.TeamPlace)
@@ -166,6 +167,8 @@ func ListSpotsCandidatesToOffensiveAssistance(assisted *client.Player, assistant
 	}
 	return spotCollection
 }
+
+// ListSpotsCandidatesToDefensiveAssistance List the best regions around the ball holder to help him in a defensive support
 func ListSpotsCandidatesToDefensiveAssistance(assisted *client.Player, assistant *Brain) []strategy.RegionCode {
 	spotCollection := []strategy.RegionCode{}
 	currentRegion := strategy.GetRegionCode(assisted.Coords, assistant.TeamPlace)
