@@ -14,11 +14,6 @@ import (
 	"github.com/makeitplay/the-dummies-go/strategy"
 )
 
-// distance considered "near" for a player to the ball
-const DistanceNearBall = strategy.RegionWidth // units float
-const ERROR_MARGIN_RUNNING = 20.0
-const ERROR_MARGIN_PASSING = 20.0
-
 var TeamState = strategy.Defensive
 var TeamBallPossession Units.TeamPlace
 var MyRule strategy.PlayerRule
@@ -52,40 +47,15 @@ func (b *Brain) ProcessAnn(msg client.GameMessage) {
 }
 
 func (b *Brain) DetermineMyState() PlayerState {
-	var isOnMyField bool
-	var subState string
-	var ballPossess string
-
 	if b.LastMsg.GameInfo.Ball.Holder == nil {
-		ballPossess = "dsp" //disputing
-		subState = "fbl"    //far
-		if int(math.Abs(b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords))) <= DistanceNearBall {
-			subState = "nbl" //near
-		}
+		return DisputingTheBall
 	} else if b.LastMsg.GameInfo.Ball.Holder.TeamPlace == b.TeamPlace {
-		ballPossess = "atk" //attacking
-		subState = "hlp"    //helping
 		if b.LastMsg.GameInfo.Ball.Holder.ID() == b.ID() {
-			subState = "hld" //holding
+			return HoldingTheBall
 		}
-	} else {
-		ballPossess = "dfd" //defending
-		subState = "org"
-		if b.isItInMyActiveRegion(b.LastMsg.GameInfo.Ball.Coords, strategy.Defensive) {
-			subState = "mrg"
-		}
+		return Supporting
 	}
-
-	if b.TeamPlace == Units.HomeTeam {
-		isOnMyField = b.LastMsg.GameInfo.Ball.Coords.PosX <= Units.CourtWidth/2
-	} else {
-		isOnMyField = b.LastMsg.GameInfo.Ball.Coords.PosX >= Units.CourtWidth/2
-	}
-	fieldState := "fr"
-	if isOnMyField {
-		fieldState = "hs"
-	}
-	return PlayerState(ballPossess + "-" + subState + "-" + fieldState)
+	return Defending
 }
 
 func (b *Brain) TakeAnAction() {
@@ -98,34 +68,16 @@ func (b *Brain) TakeAnAction() {
 		return
 	}
 	switch b.State {
-	case DsptNfblHse:
-		msg, orders = b.orderForDsptNfblHse()
+	case DisputingTheBall:
+		msg, orders = b.orderForDisputingTheBall()
 		orders = append(orders, b.CreateCatchOrder())
-	case DsptNfblFrg:
-		msg, orders = b.orderForDsptNfblFrg()
-		orders = append(orders, b.CreateCatchOrder())
-	case DsptFrblHse:
-		msg, orders = b.orderForDsptFrblHse()
-		orders = append(orders, b.CreateCatchOrder())
-	case DsptFrblFrg:
-		msg, orders = b.orderForDsptFrblFrg()
-		orders = append(orders, b.CreateCatchOrder())
-
-	case AtckHoldHse:
-		msg, orders = b.orderForAtckHoldHse()
-	case AtckHoldFrg:
+	case HoldingTheBall:
 		msg, orders = b.orderForAtckHoldFrg()
-	case AtckHelpHse:
-		msg, orders = b.orderForAtckHelpHse()
-	case AtckHelpFrg:
-		msg, orders = b.orderForAtckHelpFrg()
-	case DefdMyrgHse, DefdMyrgFrg, DefdOtrgHse, DefdOtrgFrg:
-		msg, orders = b.orderForDefdOtrgFrg()
+	case Defending:
+		msg, orders = b.orderForDefending()
 		orders = append(orders, b.CreateCatchOrder())
-	default:
-		msg = "Freeze position"
-		orders = []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
-
+	case Supporting:
+		msg, orders = b.orderForSupporting()
 	}
 	b.SendOrders(fmt.Sprintf("[%s-%s] %s", b.State, TeamState, msg), orders...)
 }
@@ -134,7 +86,6 @@ func (b *Brain) ShouldIDisputeForTheBall() bool {
 	if strategy.GetRegionCode(b.LastMsg.GameInfo.Ball.Coords, b.TeamPlace).ChessDistanceTo(b.GetActiveRegion(TeamState)) < 2 {
 		return true
 	}
-
 	myDistance := b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords)
 	playerCloser := 0
 	for _, teamMate := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
@@ -169,6 +120,7 @@ func (b *Brain) ShouldIAssist() bool {
 	}
 	return true
 }
+
 func (b *Brain) FindBestPointInterceptBall() (speed float64, target Physics.Point) {
 	if b.LastMsg.GameInfo.Ball.Velocity.Speed == 0 {
 		return Units.PlayerMaxSpeed, b.LastMsg.GameInfo.Ball.Coords
@@ -209,6 +161,7 @@ func (b *Brain) FindBestPointInterceptBall() (speed float64, target Physics.Poin
 		return Units.PlayerMaxSpeed, lastBallPosition
 	}
 }
+
 func (b *Brain) FindBestPointShootTheBall() (speed float64, target Physics.Point) {
 	goalkeeper := b.GetOpponentPlayer(b.LastMsg.GameInfo, BasicTypes.PlayerNumber("1"))
 	if goalkeeper.Coords.PosY > Units.CourtHeight/2 {
@@ -280,4 +233,26 @@ func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 			return "To center", []BasicTypes.Order{b.CreateMoveOrder(myGoal.Center, distanceFromMiddle)}
 		}
 	}
+}
+
+func (b *Brain) orderForActiveSupport() (msg string, orders []BasicTypes.Order) {
+	bestCandidateRegion := FindSpotToAssist(
+		b.LastMsg,
+		b.LastMsg.GameInfo.Ball.Holder,
+		b,
+		true,
+	)
+	target := FindBestPointInRegionToAssist(
+		b.LastMsg,
+		bestCandidateRegion,
+		b.LastMsg.GameInfo.Ball.Holder,
+	)
+	if b.Coords.DistanceTo(target) < Units.PlayerMaxSpeed {
+		if b.Velocity.Speed > 0 {
+			orders = []BasicTypes.Order{b.CreateStopOrder(*Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
+		}
+	} else {
+		orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(target)}
+	}
+	return "", orders
 }

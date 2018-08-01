@@ -34,7 +34,7 @@ func TestBrain_orderForAtckHelpFrg(t *testing.T) {
 	player.LastMsg = lastMsg
 	holder.LastMsg = lastMsg
 
-	msg, order := player.orderForAtckHelpFrg()
+	msg, order := player.orderForSupporting()
 	assert.Equal(t, "", msg)
 	assert.Equal(t, string(strategy.Offensive), string(TeamState))
 	assert.Len(t, order, 1)

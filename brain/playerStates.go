@@ -15,46 +15,20 @@ import (
 type PlayerState BasicTypes.State
 
 const (
-	// attacking, holding the ball, home field
-	AtckHoldHse PlayerState = "atk-hld-hs"
-	// attacking, holding the ball, foreign field
-	AtckHoldFrg PlayerState = "atk-hld-fr"
-	// attacking, helping the team, home field
-	AtckHelpHse PlayerState = "atk-hlp-hs"
-	// attacking, helping the team, foreign field
-	AtckHelpFrg PlayerState = "atk-hlp-fr"
+	Supporting PlayerState = "supporting"
 
-	// defading, on my region, home field
-	DefdMyrgHse PlayerState = "dfd-mrg-hs"
-	// defading, on my region, foreign field
-	DefdMyrgFrg PlayerState = "dfd-mrg-fr"
-	// defading, on other region, home field
-	DefdOtrgHse PlayerState = "dfd-org-hs"
-	// defading, on other region, foreign field
-	DefdOtrgFrg PlayerState = "dfd-org-fr"
+	HoldingTheBall PlayerState = "holding"
 
-	// disputing, near to the ball, home field
-	DsptNfblHse PlayerState = "dsp-nbl-hs"
-	// disputing, near to the ball, foreign field
-	DsptNfblFrg PlayerState = "dsp-nbl-fr"
-	// disputing, far to the ball, home field
-	DsptFrblHse PlayerState = "dsp-fbl-hs"
-	// disputing, far to the ball, foreign field
-	DsptFrblFrg PlayerState = "dsp-fbl-fr"
+	Defending PlayerState = "defending"
+
+	// disputing the ball
+	DisputingTheBall PlayerState = "disputing"
 )
 
 const PerfectPassDistance = float64(Units.BallMaxSpeed - (Units.BallDeceleration / 2))
 
-type DistanceScale string
-
-const (
-	DISTANCE_SCALE_NEAR DistanceScale = "near"
-	DISTANCE_SCALE_FAR  DistanceScale = "far"
-	DISTANCE_SCALE_GOOD DistanceScale = "good"
-)
-
 //region Disputing states
-func (b *Brain) orderForDsptNfblHse() (msg string, orders []BasicTypes.Order) {
+func (b *Brain) orderForDisputingTheBall() (msg string, orders []BasicTypes.Order) {
 	if b.ShouldIDisputeForTheBall() {
 		msg = "Disputing for the ball"
 		//orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(b.LastMsg.GameInfo.Ball.Coords)}
@@ -70,34 +44,9 @@ func (b *Brain) orderForDsptNfblHse() (msg string, orders []BasicTypes.Order) {
 	}
 }
 
-func (b *Brain) orderForDsptNfblFrg() (msg string, orders []BasicTypes.Order) {
-	return b.orderForDsptNfblHse()
-}
-
-func (b *Brain) orderForDsptFrblHse() (msg string, orders []BasicTypes.Order) {
-	return b.orderForDsptNfblHse()
-}
-
-func (b *Brain) orderForDsptFrblFrg() (msg string, orders []BasicTypes.Order) {
-	return b.orderForDsptNfblHse()
-}
-
 //endregion Disputing states
 
 //region Attack states
-
-func (b *Brain) orderForAtckHoldHse() (msg string, orders []BasicTypes.Order) {
-	nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 5)
-	obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
-	if len(obstacles) == 0 {
-		if MyRule == strategy.DefensePlayer && (TeamState == strategy.Neutral || TeamState == strategy.Offensive) {
-			return "Let's pass", b.orderPassTheBall()
-		}
-		return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
-	} else {
-		return "I need help guys!", b.orderPassTheBall()
-	}
-}
 
 func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
 	goalCoords := b.OpponentGoal().Center
@@ -111,11 +60,20 @@ func (b *Brain) orderForAtckHoldFrg() (msg string, orders []BasicTypes.Order) {
 		speed, target := b.FindBestPointShootTheBall()
 		return "Shoot!", []BasicTypes.Order{b.CreateKickOrder(target, speed)}
 	} else {
-		return b.orderForAtckHoldHse()
+		nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 5)
+		obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
+		if len(obstacles) == 0 {
+			if MyRule == strategy.DefensePlayer && (TeamState == strategy.Neutral || TeamState == strategy.Offensive) {
+				return "Let's pass", b.orderPassTheBall()
+			}
+			return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
+		} else {
+			return "I need help guys!", b.orderPassTheBall()
+		}
 	}
 }
 
-func (b *Brain) orderForAtckHelpHse() (msg string, orders []BasicTypes.Order) {
+func (b *Brain) orderForPassiveSupport() (msg string, orders []BasicTypes.Order) {
 	var region strategy.RegionCode
 	if b.ShouldIAssist() {
 		region = FindSpotToAssist(
@@ -138,33 +96,16 @@ func (b *Brain) orderForAtckHelpHse() (msg string, orders []BasicTypes.Order) {
 	return msg, orders
 }
 
-func (b *Brain) orderForAtckHelpFrg() (msg string, orders []BasicTypes.Order) {
-	if MyRule == strategy.DefensePlayer || !b.ShouldIAssist() { // middle players will give support
-		return b.orderForAtckHelpHse()
-	} else {
-		//var bestCandidatePoint Physics.Point
-		bestCandidateRegion := FindSpotToAssist(
-			b.LastMsg,
-			b.LastMsg.GameInfo.Ball.Holder,
-			b,
-			true,
-		)
-		//target := bestCandidateRegion.Center(b.TeamPlace)
-		target := FindBestPointInRegionToAssist(
-			b.LastMsg,
-			bestCandidateRegion,
-			b.LastMsg.GameInfo.Ball.Holder,
-		)
-		//obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo.Ball.Holder, bestCandidatePoint)
-		if b.Coords.DistanceTo(target) < Units.PlayerMaxSpeed {
-			if b.Velocity.Speed > 0 {
-				orders = []BasicTypes.Order{b.CreateStopOrder(*Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
-			}
-		} else {
-			orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(target)}
-		}
+func (b *Brain) orderForSupporting() (msg string, orders []BasicTypes.Order) {
+	//if MyRule == strategy.DefensePlayer || !b.ShouldIAssist() { // middle players will give support
+	//	return b.orderForPassiveSupport()
+	//} else {
+	//	return b.orderForActiveSupport()
+	//}
+	if b.ShouldIAssist() { // middle players will give support
+		return b.orderForActiveSupport()
 	}
-	return msg, orders
+	return b.orderForPassiveSupport()
 }
 func FindBestPointInRegionToAssist(gameMessage client.GameMessage, region strategy.RegionCode, assisted *client.Player) (target Physics.Point) {
 	centerPoint := region.Center(assisted.TeamPlace)
@@ -303,16 +244,7 @@ func ListSpotsCandidatesToDefensiveAssistance(assisted *client.Player, assistant
 	return spotCollection
 }
 
-func isPerfectPlace(coords Physics.Point, gameMessage client.GameMessage, assisted *client.Player, assistant *Brain) bool {
-	obstacles := watchOpponentOnMyRoute(gameMessage.GameInfo, assisted, coords)
-	bestPlaceRegion := strategy.GetRegionCode(coords, assistant.TeamPlace)
-
-	thereIsOpponents := len(obstacles)
-	thereIsNoMate := len(assistant.GetPlayersInRegion(bestPlaceRegion, assistant.FindMyTeamStatus(gameMessage.GameInfo))) == 0
-	return thereIsOpponents == 0 && thereIsNoMate
-}
-
-func (b *Brain) orderForDefdOtrgFrg() (msg string, orders []BasicTypes.Order) {
+func (b *Brain) orderForDefending() (msg string, orders []BasicTypes.Order) {
 	if b.ShouldIDisputeForTheBall() {
 		speed, target := b.FindBestPointInterceptBall()
 		orders = []BasicTypes.Order{b.CreateMoveOrder(target, speed)}
@@ -421,20 +353,5 @@ func (b *Brain) BestSpeedToTarget(target Physics.Point) float64 {
 	return (s - ((ac * math.Pow(t, 2)) / 2)) / t
 }
 
-// calc a distance scale where the player could target
-func (b *Brain) calcDistanceScale(target Physics.Point) DistanceScale {
-	distance := math.Abs(b.Coords.DistanceTo(target))
-	// try to be closer the player
-	toFar := Units.PlayerMaxSpeed * 4
-	toNear := Units.PlayerMaxSpeed * 2
-
-	if distance >= toFar {
-		return DISTANCE_SCALE_FAR
-	} else if distance < toNear {
-		return DISTANCE_SCALE_NEAR
-	} else {
-		return DISTANCE_SCALE_GOOD
-	}
-}
 
 //endregion

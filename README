@@ -12,9 +12,9 @@
 
 ### Run for deploy
 
-docker build -t the-dummies .
-HOME_IMAGE=the-dummies AWAY_IMAGE=the-dummies docker-compose up
-HOME_IMAGE=the-dummies AWAY_IMAGE=the-dummies docker-compose build --no-cache
+docker build -t the-dummies . --no-cache
+HOME_TEAM=the-dummies AWAY_TEAM=the-dummies docker-compose up
+HOME_TEAM=the-dummies AWAY_TEAM=the-dummies docker-compose build --no-cache
 
 
-HOME_IMAGE=the-dummies AWAY_IMAGE=the-dummies docker-compose rm -f
+HOME_TEAM=the-dummies AWAY_TEAM=the-dummies docker-compose rm -f

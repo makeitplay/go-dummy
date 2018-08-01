@@ -30,8 +30,8 @@
   name = "github.com/makeitplay/client-player-go"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/makeitplay/commons"
+  version = "1.0.0-alpha"
 
 [[constraint]]
   name = "github.com/stretchr/testify"

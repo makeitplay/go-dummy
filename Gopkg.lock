@@ -22,11 +22,10 @@
 [[projects]]
   branch = "master"
   name = "github.com/makeitplay/client-player-go"
-  packages = ["Game"]
-  revision = "6ccb79e64ff1e89a1db86508f78909d879d3f5d6"
+  packages = ["."]
+  revision = "e11da688e8c9378e549554e739850954dd202363"
 
 [[projects]]
-  branch = "master"
   name = "github.com/makeitplay/commons"
   packages = [
     ".",
@@ -36,7 +35,8 @@
     "Units",
     "talk"
   ]
-  revision = "e89a746d19bc41cdf94b27cf8de8ab016256edcc"
+  revision = "c2a894d6669a37b40ebe35b591f67097a721acca"
+  version = "1.0.0-alpha"
 
 [[projects]]
   name = "github.com/mattn/go-colorable"
@@ -77,6 +77,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a7e6af76b55a7f83bb3e9b43fe3cd4e087277b9c1ec67168fb5ef64e63686194"
+  inputs-digest = "2aff7927e9aa5eebc157064cdf6e5c223a729214547822e46718cb1a2279231e"
   solver-name = "gps-cdcl"
   solver-version = 1
