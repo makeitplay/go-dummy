@@ -57,3 +57,24 @@ go get github.com/makeitplay/the-dummies-go
 ```
 
 Then, you may execute the script `play.sh [home|away]` in that directory always you want to start the team.
+
+### The Dummies vs The Dummies
+
+If you have no other team to play against **The Dummies** or if you are just curious to watch a Make It Play match,
+you may start a game using The Dummies as the Home and Away teams.
+
+0. Download the [Demo Docker compose file](./docker-compose-demo.yml)
+0. Execute the command bellow:
+    ```bash
+    HOME_TEAM=makeitplay/the-dummies-go \
+    AWAY_TEAM=makeitplay/the-dummies-go \
+    docker-compose -f docker-compose-demo.yml up
+    ```
+0. Watch the game in the browser at the address `http://localhost:8080`
+
+**Important**: You probably want to remove that bunch of containers from your environment later. So, execute the command below:
+```bash
+HOME_TEAM=makeitplay/the-dummies-go \
+AWAY_TEAM=makeitplay/the-dummies-go \
+docker-compose -f docker-compose-demo.yml down
+```
