@@ -106,7 +106,7 @@ func (b *Brain) orderForHoldingTheBall() (msg string, orders []BasicTypes.Order)
 	if goalDistance < strategy.RegionWidth*1.5 {
 		nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 2)
 		obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
-		if len(obstacles) == 0 && goalDistance > Units.GoalZoneRange {
+		if len(obstacles) == 0 && goalDistance < Units.GoalZoneRange + Units.PlayerMaxSpeed / 2 {
 			return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
 		}
 		speed, target := b.FindBestPointShootTheBall()

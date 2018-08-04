@@ -2,229 +2,119 @@ version: '3.4'
 services:
   game_server:
     image: makeitplay/football:1.0.0-alpha
-    command:  -DebugMode
+    command:  -debug
     networks:
-      - home_01
-      - home_02
-      - home_03
-      - home_04
-      - home_05
-      - home_06
-      - home_07
-      - home_08
-      - home_09
-      - home_10
-      - home_11
-      - away_01
-      - away_02
-      - away_03
-      - away_04
-      - away_05
-      - away_06
-      - away_07
-      - away_08
-      - away_09
-      - away_10
-      - away_11
+      - team_01
+      - team_02
+      - team_03
+      - team_04
+      - team_05
+      - team_06
+      - team_07
+      - team_08
+      - team_09
+      - team_10
+      - team_11
       - default
     ports:
       - "8080:8080"
-  player_home_01:
-    image: ${HOME_TEAM}
-    command:  -team=home -number=1 -wshost=game_server
+  player_01:
+    image: ${team_image}
+    command:  -team=${team_place} -number=1 -wshost=game_server
     networks:
-      - home_01
+      - team_01
     depends_on:
       - game_server
-  player_home_02:
-    image: ${HOME_TEAM}
-    command:  -team=home -number=2 -wshost=game_server
+  player_02:
+    image: ${team_image}
+    command:  -team=${team_place} -number=2 -wshost=game_server
     networks:
-      - home_02
+      - team_02
     depends_on:
       - game_server
-  player_home_03:
-    image: ${HOME_TEAM}
-    command:  -team=home -number=3 -wshost=game_server
+  player_03:
+    image: ${team_image}
+    command:  -team=${team_place} -number=3 -wshost=game_server
     networks:
-      - home_03
+      - team_03
     depends_on:
       - game_server
-  player_home_04:
-    image: ${HOME_TEAM}
-    command:  -team=home -number=4 -wshost=game_server
+  player_04:
+    image: ${team_image}
+    command:  -team=${team_place} -number=4 -wshost=game_server
     networks:
-      - home_04
+      - team_04
     depends_on:
       - game_server
-  player_home_05:
-    image: ${HOME_TEAM}
-    command:  -team=home -number=5 -wshost=game_server
+  player_05:
+    image: ${team_image}
+    command:  -team=${team_place} -number=5 -wshost=game_server
     networks:
-      - home_05
+      - team_05
     depends_on:
       - game_server
-  player_home_06:
-    image: ${HOME_TEAM}
-    command:  -team=home -number=6 -wshost=game_server
+  player_06:
+    image: ${team_image}
+    command:  -team=${team_place} -number=6 -wshost=game_server
     networks:
-      - home_06
+      - team_06
     depends_on:
       - game_server
-  player_home_07:
-    image: ${HOME_TEAM}
-    command:  -team=home -number=7 -wshost=game_server
+  player_07:
+    image: ${team_image}
+    command:  -team=${team_place} -number=7 -wshost=game_server
     networks:
-      - home_07
+      - team_07
     depends_on:
       - game_server
-  player_home_08:
-    image: ${HOME_TEAM}
-    command:  -team=home -number=8 -wshost=game_server
+  player_08:
+    image: ${team_image}
+    command:  -team=${team_place} -number=8 -wshost=game_server
     networks:
-      - home_08
+      - team_08
     depends_on:
       - game_server
-  player_home_09:
-    image: ${HOME_TEAM}
-    command:  -team=home -number=9 -wshost=game_server
+  player_09:
+    image: ${team_image}
+    command:  -team=${team_place} -number=9 -wshost=game_server
     networks:
-      - home_09
+      - team_09
     depends_on:
       - game_server
-  player_home_10:
-    image: ${HOME_TEAM}
-    command:  -team=home -number=10 -wshost=game_server
+  player_10:
+    image: ${team_image}
+    command:  -team=${team_place} -number=10 -wshost=game_server
     networks:
-      - home_10
+      - team_10
     depends_on:
       - game_server
-  player_home_11:
-    image: ${HOME_TEAM}
-    command:  -team=home -number=11 -wshost=game_server
+  player_11:
+    image: ${team_image}
+    command:  -team=${team_place} -number=11 -wshost=game_server
     networks:
-      - home_11
-    depends_on:
-      - game_server
-  player_away_01:
-    image: ${AWAY_TEAM}
-    command:  -team=away -number=1 -wshost=game_server
-    networks:
-      - away_01
-    depends_on:
-      - game_server
-  player_away_02:
-    image: ${AWAY_TEAM}
-    command:  -team=away -number=2 -wshost=game_server
-    networks:
-      - away_02
-    depends_on:
-      - game_server
-  player_away_03:
-    image: ${AWAY_TEAM}
-    command:  -team=away -number=3 -wshost=game_server
-    networks:
-      - away_03
-    depends_on:
-      - game_server
-  player_away_04:
-    image: ${AWAY_TEAM}
-    command:  -team=away -number=4 -wshost=game_server
-    networks:
-      - away_04
-    depends_on:
-      - game_server
-  player_away_05:
-    image: ${AWAY_TEAM}
-    command:  -team=away -number=5 -wshost=game_server
-    networks:
-      - away_05
-    depends_on:
-      - game_server
-  player_away_06:
-    image: ${AWAY_TEAM}
-    command:  -team=away -number=6 -wshost=game_server
-    networks:
-      - away_06
-    depends_on:
-      - game_server
-  player_away_07:
-    image: ${AWAY_TEAM}
-    command:  -team=away -number=7 -wshost=game_server
-    networks:
-      - away_07
-    depends_on:
-      - game_server
-  player_away_08:
-    image: ${AWAY_TEAM}
-    command:  -team=away -number=8 -wshost=game_server
-    networks:
-      - away_08
-    depends_on:
-      - game_server
-  player_away_09:
-    image: ${AWAY_TEAM}
-    command:  -team=away -number=9 -wshost=game_server
-    networks:
-      - away_09
-    depends_on:
-      - game_server
-  player_away_10:
-    image: ${AWAY_TEAM}
-    command:  -team=away -number=10 -wshost=game_server
-    networks:
-      - away_10
-    depends_on:
-      - game_server
-  player_away_11:
-    image: ${AWAY_TEAM}
-    command:  -team=away -number=11 -wshost=game_server
-    networks:
-      - away_11
+      - team_11
     depends_on:
       - game_server
 networks:
-  home_01:
+  team_01:
     internal: true
-  home_02:
+  team_02:
     internal: true
-  home_03:
+  team_03:
     internal: true
-  home_04:
+  team_04:
     internal: true
-  home_05:
+  team_05:
     internal: true
-  home_06:
+  team_06:
     internal: true
-  home_07:
+  team_07:
     internal: true
-  home_08:
+  team_08:
     internal: true
-  home_09:
+  team_09:
     internal: true
-  home_10:
+  team_10:
     internal: true
-  home_11:
-    internal: true
-  away_01:
-    internal: true
-  away_02:
-    internal: true
-  away_03:
-    internal: true
-  away_04:
-    internal: true
-  away_05:
-    internal: true
-  away_06:
-    internal: true
-  away_07:
-    internal: true
-  away_08:
-    internal: true
-  away_09:
-    internal: true
-  away_10:
-    internal: true
-  away_11:
+  team_11:
     internal: true
