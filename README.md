@@ -8,10 +8,6 @@ This bot was made using the [Client Player](https://github.com/makeitplay/client
 
 As this name suggest, **The Dummies** are not that smart, but they may play well enough to help you to test your bot.
 
-### Documentation
-
-* [API Reference](http://godoc.org/github.com/makeitplay/the-dummies-go)
-
 ### Requirements
 
 0. Docker >= 18.03 (https://docs.docker.com/install/)
