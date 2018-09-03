@@ -59,7 +59,7 @@ Then, you may execute the script `play.sh [home|away]` in that directory always 
 If you have no other team to play against **The Dummies** or if you are just curious to watch a Make It Play match,
 you may start a game using The Dummies as the Home and Away teams.
 
-0. Download the [Demo Docker compose file](./docker-compose-demo.yml)
+0. Download the [Demo Docker compose file](https://raw.githubusercontent.com/makeitplay/the-dummies-go/master/docker-compose-demo.yml)
 0. Execute the command bellow:
     ```bash
     HOME_TEAM=makeitplay/the-dummies-go \
