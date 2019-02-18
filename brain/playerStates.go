@@ -152,7 +152,7 @@ func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 	//ballLongestShot := Units.BallMaxSpeed*framesToStop + (-Units.BallDeceleration/2) * math.Pow(framesToStop, 2)
 
 	myGoal := b.DefenseGoal()
-	longestDistance := Units.GoalWidth - Units.GoalKeeperJumpLength
+	longestDistance := Units.GoalWidth - Units.GoalKeeperJumpSpeed
 	//s = so + vt
 	t := float64(longestDistance/Units.PlayerMaxSpeed) + 1 //11
 
@@ -180,7 +180,7 @@ func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 		}
 		//the furthest safe place from the most risk side
 		//S = so + vt
-		maxDistanceICanRun := float64(Units.PlayerMaxSpeed*frameToReact) + Units.GoalKeeperJumpLength
+		maxDistanceICanRun := float64(Units.PlayerMaxSpeed*frameToReact) + Units.GoalKeeperJumpSpeed
 		safePoint := Physics.NewVector(poleInRisk, myGoal.Center).SetLength(maxDistanceICanRun).TargetFrom(poleInRisk)
 		distanceToSafePoint := safePoint.DistanceTo(b.Coords)
 		if distanceToSafePoint > Units.PlayerMaxSpeed {
