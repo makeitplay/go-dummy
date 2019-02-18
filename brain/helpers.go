@@ -93,7 +93,7 @@ func FindSpotToAssist(gameMessage client.GameMessage, assisted *client.Player, a
 		spotList = ListSpotsCandidatesToDefensiveAssistance(assisted, assistant)
 	}
 	for _, region := range spotList {
-		mateInTheRegion := assistant.GetPlayersInRegion(region, assistant.FindMyTeamStatus(gameMessage.GameInfo))
+		mateInTheRegion := assistant.GetPlayersInRegion(region, assistant.GetMyTeamStatus(gameMessage.GameInfo))
 		if len(mateInTheRegion) == 0 {
 			availableSpots = append(availableSpots, region)
 		} else if region == assistant.GetActiveRegion(TeamState) {

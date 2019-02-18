@@ -99,7 +99,7 @@ func (b *Brain) ShouldIDisputeForTheBall() bool {
 	}
 	myDistance := b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords)
 	playerCloser := 0
-	for _, teamMate := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
+	for _, teamMate := range b.GetMyTeamStatus(b.LastMsg.GameInfo).Players {
 		if teamMate.Number != b.Number && teamMate.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Coords) < myDistance {
 			playerCloser++
 			if playerCloser > 1 { // are there more than on player closer to the ball than me?
@@ -119,7 +119,7 @@ func (b *Brain) ShouldIAssist() bool {
 	myDistance := b.Coords.DistanceTo(b.LastMsg.GameInfo.Ball.Holder.Coords)
 	holderId := b.LastMsg.GameInfo.Ball.Holder.ID()
 	playerCloser := 0
-	for _, player := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
+	for _, player := range b.GetMyTeamStatus(b.LastMsg.GameInfo).Players {
 		if player.ID() != holderId && // the holder cannot help himself
 			player.Number != b.Number && // I wont count to myself
 			strategy.DefinePlayerRule(player.Number) != holderRule && // I wont count with the players rule mates because they should ALWAYS help
@@ -177,7 +177,7 @@ func (b *Brain) FindBestPointInterceptBall() (speed float64, target Physics.Poin
 
 // FindBestPointShootTheBall calculates the best point in the goal to shoot the ball
 func (b *Brain) FindBestPointShootTheBall() (speed float64, target Physics.Point) {
-	goalkeeper := b.GetOpponentPlayer(b.LastMsg.GameInfo, BasicTypes.PlayerNumber("1"))
+	goalkeeper := b.FindOpponentPlayer(b.LastMsg.GameInfo, BasicTypes.PlayerNumber("1"))
 	if goalkeeper.Coords.PosY > Units.CourtHeight/2 {
 		return Units.BallMaxSpeed, Physics.Point{
 			PosX: b.OpponentGoal().BottomPole.PosX,

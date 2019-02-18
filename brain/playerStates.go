@@ -214,7 +214,7 @@ func (b *Brain) orderAdvance() BasicTypes.Order {
 func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 	bestCandidate := new(client.Player)
 	bestScore := 0
-	for _, playerMate := range b.FindMyTeamStatus(b.LastMsg.GameInfo).Players {
+	for _, playerMate := range b.GetMyTeamStatus(b.LastMsg.GameInfo).Players {
 		if playerMate.ID() == b.ID() {
 			continue
 		}

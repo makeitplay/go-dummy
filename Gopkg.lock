@@ -2,30 +2,39 @@
 
 
 [[projects]]
+  digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
+  pruneopts = "UT"
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:865079840386857c809b72ce300be7580cb50d3d3129ce11bf9aa6ca2bc1934a"
   name = "github.com/fatih/color"
   packages = ["."]
+  pruneopts = "UT"
   revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
   version = "v1.7.0"
 
 [[projects]]
+  digest = "1:43dd08a10854b2056e615d1b1d22ac94559d822e1f8b6fcc92c1a1057e85188e"
   name = "github.com/gorilla/websocket"
   packages = ["."]
+  pruneopts = "UT"
   revision = "ea4d1f681babbce9545c9c5f3d5194a789c89f5b"
   version = "v1.2.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:9422693994d069b7980c22ac10ecd549a6f7f6fc395cb8fe876d3648049872cc"
   name = "github.com/makeitplay/client-player-go"
   packages = ["."]
+  pruneopts = "UT"
   revision = "e11da688e8c9378e549554e739850954dd202363"
 
 [[projects]]
+  digest = "1:75f376a7884e5157a3905f3572fc17a8bafb8e91a03b13da8acffe885d12c5eb"
   name = "github.com/makeitplay/commons"
   packages = [
     ".",
@@ -33,50 +42,82 @@
     "GameState",
     "Physics",
     "Units",
-    "talk"
+    "talk",
   ]
+  pruneopts = "UT"
   revision = "c2a894d6669a37b40ebe35b591f67097a721acca"
   version = "1.0.0-alpha"
 
 [[projects]]
+  digest = "1:850f036c5b812f563b20f4ee4f4a3db6e52ad67bd8e8bb2137a201574d1cae2b"
+  name = "github.com/makeitplay/the-dummies-go"
+  packages = [
+    "brain",
+    "strategy",
+  ]
+  pruneopts = "UT"
+  revision = "932f51e8fe2c28c855019a25e2a120565804e3bd"
+  version = "1.0.0-alpha"
+
+[[projects]]
+  digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
+  pruneopts = "UT"
   revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
   version = "v0.0.9"
 
 [[projects]]
+  digest = "1:d4d17353dbd05cb52a2a52b7fe1771883b682806f68db442b436294926bbfafb"
   name = "github.com/mattn/go-isatty"
   packages = ["."]
+  pruneopts = "UT"
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
 
 [[projects]]
+  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
   name = "github.com/pkg/errors"
   packages = ["."]
+  pruneopts = "UT"
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
 [[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
+  pruneopts = "UT"
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:18752d0b95816a1b777505a97f71c7467a8445b8ffb55631a7bf779f6ba4fa83"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
+  pruneopts = "UT"
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
   version = "v1.2.2"
 
 [[projects]]
   branch = "master"
+  digest = "1:8466957fb2af510f68b13aec64ccad13e9e756dc1da3ea28c422f8ac410e56f0"
   name = "golang.org/x/sys"
   packages = ["unix"]
+  pruneopts = "UT"
   revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2aff7927e9aa5eebc157064cdf6e5c223a729214547822e46718cb1a2279231e"
+  input-imports = [
+    "github.com/makeitplay/client-player-go",
+    "github.com/makeitplay/commons",
+    "github.com/makeitplay/commons/BasicTypes",
+    "github.com/makeitplay/commons/GameState",
+    "github.com/makeitplay/commons/Physics",
+    "github.com/makeitplay/commons/Units",
+    "github.com/stretchr/testify/assert",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
