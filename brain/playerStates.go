@@ -230,10 +230,10 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 			score += 40
 		} else if len(obstaclesToGoal) > 0 {
 			if obstaclesToGoal[0].DistanceTo(goalCenter) > 3.0*units.PlayerMaxSpeed {
-				commons.LogDebug("obstaclesToGoal are further than 3 frames")
+				arena.LogDebug("obstaclesToGoal are further than 3 frames")
 				score += 10
 			} else if obstaclesToGoal[0].DistanceTo(goalCenter) > 1.0*units.PlayerMaxSpeed {
-				commons.LogDebug("obstaclesToGoal are further than 1 frame")
+				arena.LogDebug("obstaclesToGoal are further than 1 frame")
 				score += 5
 			}
 		}

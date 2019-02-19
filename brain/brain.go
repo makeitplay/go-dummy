@@ -41,7 +41,7 @@ func (b *Brain) ResetPosition() {
 // ProcessAnn is the callback function called when the player gets a new message from the game server
 func (b *Brain) ProcessAnn(msg client.GameMessage) {
 	b.UpdatePosition(msg.GameInfo)
-	commons.LogBroadcast(string(msg.State))
+	arena.LogBroadcast(string(msg.State))
 	switch GameState.State(msg.State) {
 	case GameState.Listening:
 		if msg.GameInfo.Ball.Holder != nil {
