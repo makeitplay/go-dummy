@@ -1,8 +1,8 @@
 package brain
 
 import (
+	"github.com/makeitplay/arena/Physics"
 	"github.com/makeitplay/client-player-go"
-	"github.com/makeitplay/commons/Physics"
 	"github.com/makeitplay/the-dummies-go/strategy"
 	"math"
 	"sort"

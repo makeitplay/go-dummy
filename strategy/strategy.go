@@ -1,7 +1,7 @@
 package strategy
 
 import (
-	"github.com/makeitplay/commons/BasicTypes"
+	"github.com/makeitplay/arena/BasicTypes"
 	"strconv"
 )
 

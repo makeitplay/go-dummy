@@ -1,9 +1,9 @@
 package brain
 
 import (
+	"github.com/makeitplay/arena/Physics"
+	"github.com/makeitplay/arena/units"
 	"github.com/makeitplay/client-player-go"
-	"github.com/makeitplay/commons/Physics"
-	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/the-dummies-go/strategy"
 	"github.com/stretchr/testify/assert"
 	"testing"

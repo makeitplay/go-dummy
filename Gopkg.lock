@@ -35,7 +35,7 @@
 
 [[projects]]
   digest = "1:75f376a7884e5157a3905f3572fc17a8bafb8e91a03b13da8acffe885d12c5eb"
-  name = "github.com/makeitplay/commons"
+  name = "github.com/makeitplay/arena"
   packages = [
     ".",
     "BasicTypes",
@@ -112,11 +112,11 @@
   analyzer-version = 1
   input-imports = [
     "github.com/makeitplay/client-player-go",
-    "github.com/makeitplay/commons",
-    "github.com/makeitplay/commons/BasicTypes",
-    "github.com/makeitplay/commons/GameState",
-    "github.com/makeitplay/commons/Physics",
-    "github.com/makeitplay/commons/Units",
+    "github.com/makeitplay/arena",
+    "github.com/makeitplay/arena/BasicTypes",
+    "github.com/makeitplay/arena/GameState",
+    "github.com/makeitplay/arena/Physics",
+    "github.com/makeitplay/arena/units",
     "github.com/stretchr/testify/assert",
   ]
   solver-name = "gps-cdcl"

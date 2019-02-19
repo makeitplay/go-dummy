@@ -1,8 +1,8 @@
 package strategy
 
 import (
-	"github.com/makeitplay/commons/Physics"
-	"github.com/makeitplay/commons/Units"
+	"github.com/makeitplay/arena/Physics"
+	"github.com/makeitplay/arena/units"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

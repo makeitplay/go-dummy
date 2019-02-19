@@ -30,7 +30,7 @@
   name = "github.com/makeitplay/client-player-go"
 
 [[constraint]]
-  name = "github.com/makeitplay/commons"
+  name = "github.com/makeitplay/arena"
   version = "1.0.0-alpha"
 
 [[constraint]]

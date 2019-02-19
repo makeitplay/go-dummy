@@ -1,11 +1,11 @@
 package brain
 
 import (
+	"github.com/makeitplay/arena"
+	"github.com/makeitplay/arena/BasicTypes"
+	"github.com/makeitplay/arena/Physics"
+	"github.com/makeitplay/arena/units"
 	"github.com/makeitplay/client-player-go"
-	"github.com/makeitplay/commons"
-	"github.com/makeitplay/commons/BasicTypes"
-	"github.com/makeitplay/commons/Physics"
-	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/the-dummies-go/strategy"
 	"math"
 )
@@ -25,7 +25,7 @@ const (
 )
 
 // PerfectPassDistance stores the constant distance where the ball reach in max speed after 1 frame
-const PerfectPassDistance = float64(Units.BallMaxSpeed - (Units.BallDeceleration / 2))
+const PerfectPassDistance = float64(units.BallMaxSpeed - (units.BallDeceleration / 2))
 
 // orderForDisputingTheBall returns a debug msg and a list of order for the DisputingTheBall state
 func (b *Brain) orderForDisputingTheBall() (msg string, orders []BasicTypes.Order) {
@@ -66,7 +66,7 @@ func (b *Brain) orderForPassiveSupport() (msg string, orders []BasicTypes.Order)
 		region = b.GetActiveRegion(TeamState)
 	}
 	target := region.Center(b.TeamPlace)
-	if b.Coords.DistanceTo(target) < Units.PlayerMaxSpeed {
+	if b.Coords.DistanceTo(target) < units.PlayerMaxSpeed {
 		if b.Velocity.Speed > 0 {
 			orders = []BasicTypes.Order{b.CreateStopOrder(*Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
 		}
@@ -89,7 +89,7 @@ func (b *Brain) orderForActiveSupport() (msg string, orders []BasicTypes.Order) 
 		bestCandidateRegion,
 		b.LastMsg.GameInfo.Ball.Holder,
 	)
-	if b.Coords.DistanceTo(target) < Units.PlayerMaxSpeed {
+	if b.Coords.DistanceTo(target) < units.PlayerMaxSpeed {
 		if b.Velocity.Speed > 0 {
 			orders = []BasicTypes.Order{b.CreateStopOrder(*Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
 		}
@@ -104,15 +104,15 @@ func (b *Brain) orderForHoldingTheBall() (msg string, orders []BasicTypes.Order)
 	goalCoords := b.OpponentGoal().Center
 	goalDistance := b.Coords.DistanceTo(goalCoords)
 	if goalDistance < strategy.RegionWidth*1.5 {
-		nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 2)
+		nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(units.PlayerMaxSpeed * 2)
 		obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
-		if len(obstacles) == 0 && goalDistance < Units.GoalZoneRange+Units.PlayerMaxSpeed/2 {
+		if len(obstacles) == 0 && goalDistance < units.GoalZoneRange+units.PlayerMaxSpeed/2 {
 			return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
 		}
 		speed, target := b.FindBestPointShootTheBall()
 		return "Shoot!", []BasicTypes.Order{b.CreateKickOrder(target, speed)}
 	} else {
-		nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(Units.PlayerMaxSpeed * 5)
+		nextSteps := Physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(units.PlayerMaxSpeed * 5)
 		obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
 		if len(obstacles) == 0 {
 			if MyRule == strategy.DefensePlayer && (TeamState == strategy.Neutral || TeamState == strategy.Offensive) {
@@ -132,7 +132,7 @@ func (b *Brain) orderForDefending() (msg string, orders []BasicTypes.Order) {
 		orders = []BasicTypes.Order{b.CreateMoveOrder(target, speed)}
 	} else {
 		target := b.GetActiveRegion(TeamState).Center(b.TeamPlace)
-		if b.Coords.DistanceTo(target) < Units.PlayerMaxSpeed {
+		if b.Coords.DistanceTo(target) < units.PlayerMaxSpeed {
 			if b.Velocity.Speed > 0 {
 				orders = []BasicTypes.Order{b.CreateStopOrder(*Physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
 			}
@@ -147,26 +147,26 @@ func (b *Brain) orderForDefending() (msg string, orders []BasicTypes.Order) {
 // orderForGoalkeeper returns a debug msg and a list of order for the Goalkeeper state
 func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 	//V = Vo + at -> t = Vo/a
-	//framesToStop := Units.BallMaxSpeed/Units.BallDeceleration
+	//framesToStop := units.BallMaxSpeed/units.BallDeceleration
 	// (a*t^2)/2 + v*t - s
-	//ballLongestShot := Units.BallMaxSpeed*framesToStop + (-Units.BallDeceleration/2) * math.Pow(framesToStop, 2)
+	//ballLongestShot := units.BallMaxSpeed*framesToStop + (-units.BallDeceleration/2) * math.Pow(framesToStop, 2)
 
 	myGoal := b.DefenseGoal()
-	longestDistance := Units.GoalWidth - Units.GoalKeeperJumpSpeed
+	longestDistance := units.GoalWidth - units.GoalKeeperJumpSpeed
 	//s = so + vt
-	t := float64(longestDistance/Units.PlayerMaxSpeed) + 1 //11
+	t := float64(longestDistance/units.PlayerMaxSpeed) + 1 //11
 
-	distanceWatchBall := Units.BallMaxSpeed*t + float64(-Units.BallDeceleration/2)*math.Pow(t, 2)
+	distanceWatchBall := units.BallMaxSpeed*t + float64(-units.BallDeceleration/2)*math.Pow(t, 2)
 
 	if b.LastMsg.GameInfo.Ball.Coords.DistanceTo(myGoal.Center) <= distanceWatchBall {
 		distanceToTopPole := b.LastMsg.GameInfo.Ball.Coords.DistanceTo(myGoal.TopPole)
 		distanceToBottomPole := b.LastMsg.GameInfo.Ball.Coords.DistanceTo(myGoal.BottomPole)
 		//find how many frames it would take from the closest place
 		//(a*t^2)/2 + v*t - s
-		t1, t2 := QuadraticResults(-Units.BallDeceleration/2, Units.BallMaxSpeed, -distanceToTopPole)
+		t1, t2 := QuadraticResults(-units.BallDeceleration/2, units.BallMaxSpeed, -distanceToTopPole)
 		framesToTop := int(math.Ceil(math.Min(t1, t2)))
 
-		t1, t2 = QuadraticResults(-Units.BallDeceleration/2, Units.BallMaxSpeed, -distanceToBottomPole)
+		t1, t2 = QuadraticResults(-units.BallDeceleration/2, units.BallMaxSpeed, -distanceToBottomPole)
 		framesToBottom := int(math.Ceil(math.Min(t1, t2)))
 
 		var poleInRisk Physics.Point
@@ -180,10 +180,10 @@ func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 		}
 		//the furthest safe place from the most risk side
 		//S = so + vt
-		maxDistanceICanRun := float64(Units.PlayerMaxSpeed*frameToReact) + Units.GoalKeeperJumpSpeed
+		maxDistanceICanRun := float64(units.PlayerMaxSpeed*frameToReact) + units.GoalKeeperJumpSpeed
 		safePoint := Physics.NewVector(poleInRisk, myGoal.Center).SetLength(maxDistanceICanRun).TargetFrom(poleInRisk)
 		distanceToSafePoint := safePoint.DistanceTo(b.Coords)
-		if distanceToSafePoint > Units.PlayerMaxSpeed {
+		if distanceToSafePoint > units.PlayerMaxSpeed {
 			return "Run to best spot!", []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(safePoint)}
 		} else if distanceToSafePoint < 5 { //just a tolerance
 			return "Be focused!!", []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
@@ -193,7 +193,7 @@ func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 
 	} else {
 		distanceFromMiddle := b.Coords.DistanceTo(myGoal.Center)
-		if distanceFromMiddle > Units.PlayerMaxSpeed {
+		if distanceFromMiddle > units.PlayerMaxSpeed {
 			return "Back to position!", []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(myGoal.Center)}
 		} else if distanceFromMiddle < 5 { //just a tolerance
 			return "Just watch the game!", []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
@@ -226,21 +226,21 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 
 		score := 100
 		score -= len(obstaclesFromMe) * 10
-		if len(obstaclesToGoal) == 0 && distanceToGoal < Units.CourtWidth/4 {
+		if len(obstaclesToGoal) == 0 && distanceToGoal < units.CourtWidth/4 {
 			score += 40
 		} else if len(obstaclesToGoal) > 0 {
-			if obstaclesToGoal[0].DistanceTo(goalCenter) > 3.0*Units.PlayerMaxSpeed {
+			if obstaclesToGoal[0].DistanceTo(goalCenter) > 3.0*units.PlayerMaxSpeed {
 				commons.LogDebug("obstaclesToGoal are further than 3 frames")
 				score += 10
-			} else if obstaclesToGoal[0].DistanceTo(goalCenter) > 1.0*Units.PlayerMaxSpeed {
+			} else if obstaclesToGoal[0].DistanceTo(goalCenter) > 1.0*units.PlayerMaxSpeed {
 				commons.LogDebug("obstaclesToGoal are further than 1 frame")
 				score += 5
 			}
 		}
 
-		if distanceFromMe <= Units.BallMaxSpeed/2 {
+		if distanceFromMe <= units.BallMaxSpeed/2 {
 			score -= 10
-		} else if math.Abs(distanceFromMe-PerfectPassDistance) < Units.PlayerMaxSpeed {
+		} else if math.Abs(distanceFromMe-PerfectPassDistance) < units.PlayerMaxSpeed {
 			score += 20
 		} else if distanceFromMe <= strategy.RegionWidth { // trocar pela largura da Ragion
 			//commons.LogDebug("too far")
@@ -267,8 +267,8 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 //BestSpeedToTarget calculates the best speed to reach a specific point with the ball
 func (b *Brain) BestSpeedToTarget(target Physics.Point) float64 {
 	distance := b.LastMsg.GameInfo.Ball.Coords.DistanceTo(target)
-	ballSpeed := Units.BallMaxSpeed
-	deceleration := float64(Units.BallDeceleration)
+	ballSpeed := units.BallMaxSpeed
+	deceleration := float64(units.BallDeceleration)
 
 	//quadratic formula (-a/2)t^2 + vt - s
 	A := -deceleration / 2
@@ -281,7 +281,7 @@ func (b *Brain) BestSpeedToTarget(target Physics.Point) float64 {
 	// quadratic formula: -b +/- sqrt(delta)/2a
 	t1 := (-B + math.Sqrt(delta)) / (2 * A)
 	if math.IsNaN(t1) { // target too far
-		return Units.BallMaxSpeed
+		return units.BallMaxSpeed
 	}
 	//t2 := (- B / math.Sqrt(delta)) / (2*A) //opposite side
 
