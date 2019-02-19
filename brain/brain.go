@@ -7,7 +7,7 @@ import (
 	"github.com/makeitplay/arena"
 	"github.com/makeitplay/arena/BasicTypes"
 	"github.com/makeitplay/arena/GameState"
-	"github.com/makeitplay/arena/Physics"
+	"github.com/makeitplay/arena/physics"
 	"github.com/makeitplay/arena/units"
 
 	"github.com/makeitplay/client-player-go"
@@ -133,11 +133,11 @@ func (b *Brain) ShouldIAssist() bool {
 }
 
 // FindBestPointInterceptBall finds a best spot around the ball holder to give support to him
-func (b *Brain) FindBestPointInterceptBall() (speed float64, target Physics.Point) {
+func (b *Brain) FindBestPointInterceptBall() (speed float64, target physics.Point) {
 	if b.LastMsg.GameInfo.Ball.Velocity.Speed == 0 {
 		return units.PlayerMaxSpeed, b.LastMsg.GameInfo.Ball.Coords
 	} else {
-		calcBallPos := func(frame int) *Physics.Point {
+		calcBallPos := func(frame int) *physics.Point {
 			//S = So + VT + (aT^2)/2
 			V := b.LastMsg.GameInfo.Ball.Velocity.Speed
 			T := float64(frame)
@@ -175,15 +175,15 @@ func (b *Brain) FindBestPointInterceptBall() (speed float64, target Physics.Poin
 }
 
 // FindBestPointShootTheBall calculates the best point in the goal to shoot the ball
-func (b *Brain) FindBestPointShootTheBall() (speed float64, target Physics.Point) {
+func (b *Brain) FindBestPointShootTheBall() (speed float64, target physics.Point) {
 	goalkeeper := b.FindOpponentPlayer(b.LastMsg.GameInfo, BasicTypes.PlayerNumber("1"))
 	if goalkeeper.Coords.PosY > units.CourtHeight/2 {
-		return units.BallMaxSpeed, Physics.Point{
+		return units.BallMaxSpeed, physics.Point{
 			PosX: b.OpponentGoal().BottomPole.PosX,
 			PosY: b.OpponentGoal().BottomPole.PosY + units.BallSize,
 		}
 	} else {
-		return units.BallMaxSpeed, Physics.Point{
+		return units.BallMaxSpeed, physics.Point{
 			PosX: b.OpponentGoal().TopPole.PosX,
 			PosY: b.OpponentGoal().TopPole.PosY - units.BallSize,
 		}

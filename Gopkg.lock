@@ -115,7 +115,7 @@
     "github.com/makeitplay/arena",
     "github.com/makeitplay/arena/BasicTypes",
     "github.com/makeitplay/arena/GameState",
-    "github.com/makeitplay/arena/Physics",
+    "github.com/makeitplay/arena/physics",
     "github.com/makeitplay/arena/units",
     "github.com/stretchr/testify/assert",
   ]

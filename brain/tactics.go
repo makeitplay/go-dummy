@@ -1,7 +1,7 @@
 package brain
 
 import (
-	"github.com/makeitplay/arena/Physics"
+	"github.com/makeitplay/arena/physics"
 	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/the-dummies-go/strategy"
 )
@@ -18,7 +18,7 @@ func (b *Brain) myCurrentRegion() strategy.RegionCode {
 
 // isItInMyActiveRegion find out whether a point is within the active region
 // @todo do I need this method?
-func (b *Brain) isItInMyActiveRegion(coords Physics.Point, strategyState strategy.TeamState) bool {
+func (b *Brain) isItInMyActiveRegion(coords physics.Point, strategyState strategy.TeamState) bool {
 	myRegionCode := b.GetActiveRegion(strategyState)
 	regionCode := strategy.GetRegionCode(coords, b.TeamPlace)
 	return myRegionCode == regionCode
@@ -26,14 +26,14 @@ func (b *Brain) isItInMyActiveRegion(coords Physics.Point, strategyState strateg
 
 // isItInMyCurrentRegion find out whether a point is within the current region
 // @todo do I need this method?
-func (b *Brain) isItInMyCurrentRegion(coords Physics.Point, strategyState strategy.TeamState) bool {
+func (b *Brain) isItInMyCurrentRegion(coords physics.Point, strategyState strategy.TeamState) bool {
 	myRegionCode := b.myCurrentRegion()
 	regionCode := strategy.GetRegionCode(coords, b.TeamPlace)
 	return myRegionCode == regionCode
 }
 
 // GetActiveRegionCenter gets the center of the active region
-func (b *Brain) GetActiveRegionCenter(strategyState strategy.TeamState) Physics.Point {
+func (b *Brain) GetActiveRegionCenter(strategyState strategy.TeamState) physics.Point {
 	myRegionCode := b.GetActiveRegion(strategyState)
 	return myRegionCode.Center(b.TeamPlace)
 }

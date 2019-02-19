@@ -1,7 +1,7 @@
 package brain
 
 import (
-	"github.com/makeitplay/arena/Physics"
+	"github.com/makeitplay/arena/physics"
 	"github.com/makeitplay/arena/units"
 	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/the-dummies-go/strategy"
@@ -27,13 +27,13 @@ func TestBrain_myCurrentRegion(t *testing.T) {
 	aldair.TeamPlace = Units.HomeTeam
 	aldair.Number = "3"
 
-	aldair.Coords = Physics.Point{
+	aldair.Coords = physics.Point{
 		PosX: strategy.RegionWidth * 3.4,  //3
 		PosY: strategy.RegionHeight * 2.1, //2
 	}
 	assert.Equal(t, strategy.RegionCode{3, 2}, aldair.myCurrentRegion())
 
-	aldair.Coords = Physics.Point{
+	aldair.Coords = physics.Point{
 		PosX: strategy.RegionWidth * 4.2,  //4
 		PosY: strategy.RegionHeight * 0.1, //0
 	}
@@ -41,7 +41,7 @@ func TestBrain_myCurrentRegion(t *testing.T) {
 
 	aldair.TeamPlace = Units.AwayTeam
 
-	aldair.Coords = Physics.Point{
+	aldair.Coords = physics.Point{
 		PosX: strategy.RegionWidth * 4.2,  //3
 		PosY: strategy.RegionHeight * 0.1, //3
 	}
@@ -55,17 +55,17 @@ func TestBrain_isItInMyActiveRegion(t *testing.T) {
 	aldair.TeamPlace = Units.HomeTeam
 	aldair.Number = "5"
 
-	assert.True(t, aldair.isItInMyActiveRegion(Physics.Point{
+	assert.True(t, aldair.isItInMyActiveRegion(physics.Point{
 		PosX: strategy.RegionWidth * 4.2,
 		PosY: strategy.RegionHeight * 3.1,
 	}, strategy.OnAttack))
 
-	assert.False(t, aldair.isItInMyActiveRegion(Physics.Point{
+	assert.False(t, aldair.isItInMyActiveRegion(physics.Point{
 		PosX: strategy.RegionWidth * 3.2,
 		PosY: strategy.RegionHeight * 3.1,
 	}, strategy.OnAttack))
 
-	assert.False(t, aldair.isItInMyActiveRegion(Physics.Point{
+	assert.False(t, aldair.isItInMyActiveRegion(physics.Point{
 		PosX: strategy.RegionWidth * 4.2,
 		PosY: strategy.RegionHeight * 2.1,
 	}, strategy.OnAttack))

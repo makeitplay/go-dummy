@@ -1,7 +1,7 @@
 package brain
 
 import (
-	"github.com/makeitplay/arena/Physics"
+	"github.com/makeitplay/arena/physics"
 	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/the-dummies-go/strategy"
 	"math"
@@ -9,7 +9,7 @@ import (
 )
 
 // PointCollection creates a list of points
-type PointCollection []Physics.Point
+type PointCollection []physics.Point
 
 // Len implements the
 func (s PointCollection) Swap(i, j int) {
@@ -20,15 +20,15 @@ func (s PointCollection) Swap(i, j int) {
 // @todo this struct may be removed if we use the sort.Slice function
 type SortByDistance struct {
 	PointCollection
-	From Physics.Point
+	From physics.Point
 }
 
 // watchOpponentOnMyRoute returns a list for obstacle between the player an it's target sorted by the distance to it
-func watchOpponentOnMyRoute(status client.GameInfo, player *client.Player, target Physics.Point) PointCollection {
+func watchOpponentOnMyRoute(status client.GameInfo, player *client.Player, target physics.Point) PointCollection {
 	opponentTeam := player.GetOpponentTeam(status)
 	collisionPoints := SortByDistance{From: player.Coords}
 
-	vectorExpected := Physics.NewVector(player.Coords, target)
+	vectorExpected := physics.NewVector(player.Coords, target)
 	for _, opponent := range opponentTeam.Players {
 		collisionPoint := opponent.VectorCollides(*vectorExpected, player.Coords, float64(player.Size)/2)
 
@@ -50,9 +50,9 @@ func QuadraticResults(a, b, c float64) (float64, float64) {
 }
 
 // FindBestPointInRegionToAssist finds the best point to support the ball holder from within a region
-func FindBestPointInRegionToAssist(gameMessage client.GameMessage, region strategy.RegionCode, assisted *client.Player) (target Physics.Point) {
+func FindBestPointInRegionToAssist(gameMessage client.GameMessage, region strategy.RegionCode, assisted *client.Player) (target physics.Point) {
 	centerPoint := region.Center(assisted.TeamPlace)
-	vctToCenter := Physics.NewVector(assisted.Coords, centerPoint).SetLength(strategy.RegionWidth)
+	vctToCenter := physics.NewVector(assisted.Coords, centerPoint).SetLength(strategy.RegionWidth)
 	obstacles := watchOpponentOnMyRoute(gameMessage.GameInfo, assisted, vctToCenter.TargetFrom(assisted.Coords))
 	if len(obstacles) == 0 {
 		return vctToCenter.TargetFrom(assisted.Coords)

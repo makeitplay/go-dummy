@@ -1,34 +1,34 @@
 package strategy
 
 import (
-	"github.com/makeitplay/arena/Physics"
+	"github.com/makeitplay/arena/physics"
 	"github.com/makeitplay/arena/units"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestGetRegionCode(t *testing.T) {
-	code := GetRegionCode(Physics.Point{0, 0}, Units.HomeTeam)
+	code := GetRegionCode(physics.Point{0, 0}, Units.HomeTeam)
 	assert.Equal(t, 0, code.X)
 	assert.Equal(t, 0, code.Y)
 
-	code = GetRegionCode(Physics.Point{0, 0}, Units.AwayTeam)
+	code = GetRegionCode(physics.Point{0, 0}, Units.AwayTeam)
 	assert.Equal(t, 7, code.X)
 	assert.Equal(t, 3, code.Y)
 
-	code = GetRegionCode(Physics.Point{Units.CourtWidth, Units.CourtHeight}, Units.AwayTeam)
+	code = GetRegionCode(physics.Point{Units.CourtWidth, Units.CourtHeight}, Units.AwayTeam)
 	assert.Equal(t, 0, code.X)
 	assert.Equal(t, 0, code.Y)
 
-	code = GetRegionCode(Physics.Point{Units.CourtWidth, Units.CourtHeight}, Units.HomeTeam)
+	code = GetRegionCode(physics.Point{Units.CourtWidth, Units.CourtHeight}, Units.HomeTeam)
 	assert.Equal(t, 7, code.X)
 	assert.Equal(t, 3, code.Y)
 
-	code = GetRegionCode(Physics.Point{0, Units.CourtHeight}, Units.HomeTeam)
+	code = GetRegionCode(physics.Point{0, Units.CourtHeight}, Units.HomeTeam)
 	assert.Equal(t, 0, code.X)
 	assert.Equal(t, 3, code.Y)
 
-	code = GetRegionCode(Physics.Point{0, Units.CourtHeight}, Units.AwayTeam)
+	code = GetRegionCode(physics.Point{0, Units.CourtHeight}, Units.AwayTeam)
 	assert.Equal(t, 7, code.X)
 	assert.Equal(t, 0, code.Y)
 }
