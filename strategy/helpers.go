@@ -1,11 +1,13 @@
 package strategy
 
 import (
+	"fmt"
 	"github.com/makeitplay/arena"
 	"github.com/makeitplay/arena/physics"
 	"github.com/makeitplay/arena/units"
 	"github.com/makeitplay/client-player-go"
 	"math"
+	"sort"
 )
 
 func DetermineMyState(turn client.TurnContext) PlayerState {
@@ -83,4 +85,28 @@ func FindBestPointInterceptBall(ball client.Ball, player *client.Player) (speed 
 		}
 		return units.PlayerMaxSpeed, lastBallPosition
 	}
+}
+
+// watchOpponentOnMyRoute returns a list for obstacle between the player an it's target sorted by the distance to it
+func WatchOpponentOnMyRoute(origin, target physics.Point, margin float64, opponentTeam client.Team) ([]physics.Point, error) {
+	collisionPoints := []physics.Point{}
+	distanceToTarget := origin.DistanceTo(target)
+	vectorExpected, err := physics.NewVector(origin, target)
+	if err != nil {
+		return nil, fmt.Errorf("cannot find obstacles between the two points: %s", err)
+	}
+	for _, opponent := range opponentTeam.Players {
+		if opponent.Coords.DistanceTo(origin) < distanceToTarget {
+			collisionPoint := opponent.VectorCollides(*vectorExpected, origin, margin)
+			if collisionPoint != nil {
+				collisionPoints = append(collisionPoints, *collisionPoint)
+			}
+		}
+
+	}
+	sort.Slice(collisionPoints, func(i, j int) bool {
+		return collisionPoints[i].DistanceTo(origin) < collisionPoints[j].DistanceTo(origin)
+	})
+
+	return collisionPoints, nil
 }

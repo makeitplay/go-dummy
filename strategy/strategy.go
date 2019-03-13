@@ -31,12 +31,12 @@ const (
 
 type Region map[TeamState]RegionCode
 
-type PlayerRule string
+type PlayerRule int
 
 const (
-	DefensePlayer PlayerRule = "defense"
-	MiddlePlayer  PlayerRule = "middle"
-	AttackPlayer  PlayerRule = "attack"
+	DefensePlayer PlayerRule = iota
+	MiddlePlayer
+	AttackPlayer
 )
 
 var PlayerRegionMap = map[arena.PlayerNumber]Region{
