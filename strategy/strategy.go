@@ -1,17 +1,33 @@
 package strategy
 
 import (
-	"github.com/makeitplay/arena/BasicTypes"
+	"github.com/makeitplay/arena"
 	"strconv"
 )
 
 type TeamState string
 
-const UnderPressure TeamState = "under-pressure"
-const Defensive TeamState = "defensive"
-const Neutral TeamState = "neutral"
-const Offensive TeamState = "offensive"
-const OnAttack TeamState = "on-attack"
+const (
+	UnderPressure TeamState = "under-pressure"
+	Defensive     TeamState = "defensive"
+	Neutral       TeamState = "neutral"
+	Offensive     TeamState = "offensive"
+	OnAttack      TeamState = "on-attack"
+)
+
+// PlayerState defines states specific for players
+type PlayerState string
+
+const (
+	// Supporting identifies the player supporting the team mate
+	Supporting PlayerState = "supporting"
+	// HoldingTheBall identifies the player holding	the ball
+	HoldingTheBall PlayerState = "holding"
+	// Defending identifies the player defending against the opponent team
+	Defending PlayerState = "defending"
+	// DisputingTheBall identifies the player disputing the ball
+	DisputingTheBall PlayerState = "disputing"
+)
 
 type Region map[TeamState]RegionCode
 
@@ -23,7 +39,7 @@ const (
 	AttackPlayer  PlayerRule = "attack"
 )
 
-var PlayerRegionMap = map[BasicTypes.PlayerNumber]Region{
+var PlayerRegionMap = map[arena.PlayerNumber]Region{
 	//defense players
 	"2": {
 		UnderPressure: RegionCode{0, 0},
@@ -101,7 +117,7 @@ var PlayerRegionMap = map[BasicTypes.PlayerNumber]Region{
 	},
 }
 
-func DefinePlayerRule(number BasicTypes.PlayerNumber) PlayerRule {
+func DefinePlayerRule(number arena.PlayerNumber) PlayerRule {
 	num, _ := strconv.Atoi(string(number))
 	if num < 6 {
 		return DefensePlayer

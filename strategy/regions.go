@@ -1,16 +1,17 @@
 package strategy
 
 import (
+	"github.com/makeitplay/arena"
 	"github.com/makeitplay/arena/physics"
 	"github.com/makeitplay/arena/units"
 	"math"
 )
 
 // RegionHeight defines the height of a region
-const RegionHeight = units.CourtHeight / 4
+const RegionHeight = units.FieldHeight / 4
 
 // RegionWidth defines the width of a region
-const RegionWidth = units.CourtWidth / 8
+const RegionWidth = units.FieldWidth / 8
 
 // PlayerRegion defines a region based on the left-bottom and top-right coordinates of the region
 type PlayerRegion struct {
@@ -27,36 +28,36 @@ type RegionCode struct {
 }
 
 // Center finds the central coordinates of the region
-func (r RegionCode) Center(place units.TeamPlace) physics.Point {
+func (r RegionCode) Center(place arena.TeamPlace) physics.Point {
 	center := physics.Point{
 		PosX: (r.X * RegionWidth) + (RegionWidth / 2),
 		PosY: (r.Y * RegionHeight) + (RegionHeight / 2),
 	}
-	if place == units.AwayTeam {
+	if place == arena.AwayTeam {
 		center = MirrorCoordsToAway(center)
 	}
 	return center
 }
 
 // ForwardRightCorner finds the point of the region at the right edge that is closer to the attack field
-func (r RegionCode) ForwardRightCorner(place units.TeamPlace) physics.Point {
+func (r RegionCode) ForwardRightCorner(place arena.TeamPlace) physics.Point {
 	fr := physics.Point{
 		PosX: (r.X + 1) * RegionWidth,
 		PosY: r.Y * RegionHeight,
 	}
-	if place == units.AwayTeam {
+	if place == arena.AwayTeam {
 		fr = MirrorCoordsToAway(fr)
 	}
 	return fr
 }
 
 // ForwardLeftCorner finds the point of the region at the left edge that is closer to the attack field
-func (r RegionCode) ForwardLeftCorner(place units.TeamPlace) physics.Point {
+func (r RegionCode) ForwardLeftCorner(place arena.TeamPlace) physics.Point {
 	fl := physics.Point{
 		PosX: (r.X + 1) * RegionWidth,
 		PosY: (r.Y + 1) * RegionHeight,
 	}
-	if place == units.AwayTeam {
+	if place == arena.AwayTeam {
 		fl = MirrorCoordsToAway(fl)
 	}
 	return fl
@@ -114,8 +115,8 @@ func (r RegionCode) ChessDistanceTo(b RegionCode) int {
 	))
 }
 
-func GetRegionCode(a physics.Point, place units.TeamPlace) RegionCode {
-	if place == units.AwayTeam {
+func GetRegionCode(a physics.Point, place arena.TeamPlace) RegionCode {
+	if place == arena.AwayTeam {
 		a = MirrorCoordsToAway(a)
 	}
 	cx := float64(a.PosX / RegionWidth)
@@ -130,7 +131,7 @@ func GetRegionCode(a physics.Point, place units.TeamPlace) RegionCode {
 // Keep in mind that all coords in the field is based on the bottom left corner!
 func MirrorCoordsToAway(coords physics.Point) physics.Point {
 	return physics.Point{
-		PosX: units.CourtWidth - coords.PosX,
-		PosY: units.CourtHeight - coords.PosY,
+		PosX: units.FieldWidth - coords.PosX,
+		PosY: units.FieldHeight - coords.PosY,
 	}
 }

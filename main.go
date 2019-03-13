@@ -4,10 +4,10 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/makeitplay/arena"
 	"github.com/makeitplay/client-player-go"
-	"github.com/makeitplay/the-dummies-go/brain"
+	"github.com/makeitplay/the-dummies-go/dummie"
 	"github.com/makeitplay/the-dummies-go/strategy"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -15,16 +15,35 @@ func main() {
 	serverConfig := new(client.Configuration)
 	serverConfig.ParseFromFlags()
 
-	brain.MyRule = strategy.DefinePlayerRule(serverConfig.PlayerNumber)
-	brain.TeamBallPossession = serverConfig.TeamPlace
+	gamer := &client.Gamer{}
 
-	player := &client.Player{}
-	playerBrain := &brain.Brain{Player: player}
-	playerBrain.TeamPlace = serverConfig.TeamPlace
-	playerBrain.Number = serverConfig.PlayerNumber
-	playerBrain.ResetPosition()
-	playerBrain.Player.OnAnnouncement = playerBrain.ProcessAnn
-	logger := logrus.New()
+	dummie.PlayerNumber = serverConfig.PlayerNumber
+	dummie.TeamPlace = serverConfig.TeamPlace
+	dummie.MyRule = strategy.DefinePlayerRule(serverConfig.PlayerNumber)
+	dummie.TeamBallPossession = dummie.TeamPlace
+	dummie.ClientResponser = gamer
 
-	playerBrain.Start(logger, serverConfig)
+	gamer.OnAnnouncement = reactToNewState
+	gamer.Play(dummie.GetInitialRegion().Center(serverConfig.TeamPlace), serverConfig)
+}
+
+func reactToNewState(ctx client.TurnContext) {
+
+	switch ctx.GameMsg().GameInfo.State {
+	case arena.Listening:
+		if ctx.GameMsg().Ball().Holder != nil {
+			dummie.TeamBallPossession = ctx.GameMsg().Ball().Holder.TeamPlace
+		}
+
+		dummy := &dummie.Dummie{
+			GameMsg:     ctx.GameMsg(),
+			Player:      ctx.Player(),
+			PlayerState: strategy.DetermineMyState(ctx),
+			TeamState:   strategy.DetermineMyTeamState(ctx, dummie.TeamBallPossession),
+			Logger:      ctx.Logger(),
+		}
+
+		ctx.Logger().Infof("my state: %s", dummy.PlayerState)
+		dummy.React()
+	}
 }
