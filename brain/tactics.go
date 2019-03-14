@@ -38,32 +38,6 @@ func (b *Brain) GetActiveRegionCenter(strategyState strategy.TeamState) physics.
 	return myRegionCode.Center(b.TeamPlace)
 }
 
-// DetermineMyTeamState determine the current team state based on the last game server message
-func (b *Brain) DetermineMyTeamState(msg client.GameMessage) strategy.TeamState {
-	ballRegionCode := strategy.GetRegionCode(msg.GameInfo.Ball.Coords, b.TeamPlace)
-	if TeamBallPossession != b.TeamPlace {
-		if ballRegionCode.X < 3 {
-			return strategy.UnderPressure
-		} else if ballRegionCode.X < 5 {
-			return strategy.Defensive
-		} else if ballRegionCode.X < 7 {
-			return strategy.Neutral
-		} else {
-			return strategy.Offensive
-		}
-	} else {
-		if ballRegionCode.X < 2 {
-			return strategy.Defensive
-		} else if ballRegionCode.X < 4 {
-			return strategy.Neutral
-		} else if ballRegionCode.X < 6 {
-			return strategy.Offensive
-		} else {
-			return strategy.OnAttack
-		}
-	}
-}
-
 // GetPlayersInRegion list all player in a specific region
 func (b *Brain) GetPlayersInRegion(regionCode strategy.RegionCode, team client.Team) []*client.Player {
 	var playerList []*client.Player

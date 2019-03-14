@@ -2,7 +2,7 @@ package brain
 
 import (
 	"github.com/makeitplay/arena"
-	"github.com/makeitplay/arena/BasicTypes"
+	"github.com/makeitplay/arena/orders"
 	"github.com/makeitplay/arena/physics"
 	"github.com/makeitplay/arena/units"
 	"github.com/makeitplay/client-player-go"
@@ -10,42 +10,43 @@ import (
 	"math"
 )
 
-// PlayerState defines states specific for players
-type PlayerState BasicTypes.State
-
-const (
-	// Supporting identifies the player supporting the team mate
-	Supporting PlayerState = "supporting"
-	// HoldingTheBall identifies the player holding	the ball
-	HoldingTheBall PlayerState = "holding"
-	// Defending identifies the player defending against the opponent team
-	Defending PlayerState = "defending"
-	// DisputingTheBall identifies the player disputing the ball
-	DisputingTheBall PlayerState = "disputing"
-)
-
 // PerfectPassDistance stores the constant distance where the ball reach in max speed after 1 frame
 const PerfectPassDistance = float64(units.BallMaxSpeed - (units.BallDeceleration / 2))
 
 // orderForDisputingTheBall returns a debug msg and a list of order for the DisputingTheBall state
-func (b *Brain) orderForDisputingTheBall() (msg string, orders []BasicTypes.Order) {
+func (b *Brain) orderForDisputingTheBall(turn client.TurnContext) (msg string, ordersSet []orders.Order) {
+	player := turn.Player()
 	if b.ShouldIDisputeForTheBall() {
 		msg = "Disputing for the ball"
-		//orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(b.LastMsg.GameInfo.Ball.Coords)}
+		//orders = []orders.Order{b.CreateMoveOrderMaxSpeed(b.LastMsg.GameInfo.Ball.Coords)}
 		speed, target := b.FindBestPointInterceptBall()
-		orders = []BasicTypes.Order{b.CreateMoveOrder(target, speed)}
-		return msg, orders
+		movOrder, err := player.CreateMoveOrder(target, speed)
+		if err != nil {
+			turn.Logger().Errorf("error creating move order: %s ", err)
+			msg = "sorry, I won't play this turn"
+		} else {
+			ordersSet = []orders.Order{movOrder}
+		}
 	} else {
 		if b.myCurrentRegion() != b.GetActiveRegion(TeamState) {
-			return "Moving to my region", []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(b.GetActiveRegionCenter(TeamState))}
+			movOrder, err := player.CreateMoveOrderMaxSpeed(b.GetActiveRegionCenter(TeamState))
+			if err != nil {
+				turn.Logger().Errorf("error creating move order: %s ", err)
+				msg = "sorry, I won't play this turn"
+			} else {
+				msg = "Moving to my region"
+				ordersSet = []orders.Order{movOrder}
+			}
 		} else {
-			return "Holding position", []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
+			msg = "Holding position"
+			ordersSet = []orders.Order{player.CreateStopOrder(*player.Velocity.Direction)}
 		}
 	}
+	return msg, ordersSet
 }
 
 // orderForSupporting returns a debug msg and a list of order for the Supporting state
-func (b *Brain) orderForSupporting() (msg string, orders []BasicTypes.Order) {
+func (b *Brain) orderForSupporting() (msg string, orders []orders.Order) {
 	if b.ShouldIAssist() { // middle players will give support
 		return b.orderForActiveSupport()
 	}
@@ -53,7 +54,8 @@ func (b *Brain) orderForSupporting() (msg string, orders []BasicTypes.Order) {
 }
 
 // orderForPassiveSupport returns a debug msg and a list of order for the Support state when the player is only holding position
-func (b *Brain) orderForPassiveSupport() (msg string, orders []BasicTypes.Order) {
+func (b *Brain) orderForPassiveSupport(turn client.TurnContext) (msg string, orders []orders.Order) {
+	player := turn.Player()
 	var region strategy.RegionCode
 	if b.ShouldIAssist() {
 		region = FindSpotToAssist(
@@ -66,78 +68,37 @@ func (b *Brain) orderForPassiveSupport() (msg string, orders []BasicTypes.Order)
 		region = b.GetActiveRegion(TeamState)
 	}
 	target := region.Center(b.TeamPlace)
-	if b.Coords.DistanceTo(target) < units.PlayerMaxSpeed {
-		if b.Velocity.Speed > 0 {
-			orders = []BasicTypes.Order{b.CreateStopOrder(*physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
+	if player.Coords.DistanceTo(target) < units.PlayerMaxSpeed {
+		if player.Velocity.Speed > 0 {
+			orders = []orders.Order{b.CreateStopOrder(*physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
 		}
 	} else {
-		orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(target)}
+		orders = []orders.Order{b.CreateMoveOrderMaxSpeed(target)}
 	}
 	return msg, orders
 }
 
 // orderForActiveSupport returns a debug msg and a list of order for the Support state when the player is assisting the ball holder
-func (b *Brain) orderForActiveSupport() (msg string, orders []BasicTypes.Order) {
-	bestCandidateRegion := FindSpotToAssist(
-		b.LastMsg,
-		b.LastMsg.GameInfo.Ball.Holder,
-		b,
-		true,
-	)
-	target := FindBestPointInRegionToAssist(
-		b.LastMsg,
-		bestCandidateRegion,
-		b.LastMsg.GameInfo.Ball.Holder,
-	)
-	if b.Coords.DistanceTo(target) < units.PlayerMaxSpeed {
-		if b.Velocity.Speed > 0 {
-			orders = []BasicTypes.Order{b.CreateStopOrder(*physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
-		}
-	} else {
-		orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(target)}
-	}
-	return "", orders
+func (b *Brain) orderForActiveSupport() (msg string, orders []orders.Order) {
 }
 
 // orderForHoldingTheBall returns a debug msg and a list of order for the HoldingTheBall state
-func (b *Brain) orderForHoldingTheBall() (msg string, orders []BasicTypes.Order) {
-	goalCoords := b.OpponentGoal().Center
-	goalDistance := b.Coords.DistanceTo(goalCoords)
-	if goalDistance < strategy.RegionWidth*1.5 {
-		nextSteps := physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(units.PlayerMaxSpeed * 2)
-		obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
-		if len(obstacles) == 0 && goalDistance < units.GoalZoneRange+units.PlayerMaxSpeed/2 {
-			return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
-		}
-		speed, target := b.FindBestPointShootTheBall()
-		return "Shoot!", []BasicTypes.Order{b.CreateKickOrder(target, speed)}
-	} else {
-		nextSteps := physics.NewVector(b.Player.Coords, b.OpponentGoal().Center).SetLength(units.PlayerMaxSpeed * 5)
-		obstacles := watchOpponentOnMyRoute(b.LastMsg.GameInfo, b.Player, nextSteps.TargetFrom(b.Player.Coords))
-		if len(obstacles) == 0 {
-			if MyRule == strategy.DefensePlayer && (TeamState == strategy.Neutral || TeamState == strategy.Offensive) {
-				return "Let's pass", b.orderPassTheBall()
-			}
-			return "I am free yet", []BasicTypes.Order{b.orderAdvance()}
-		} else {
-			return "I need help guys!", b.orderPassTheBall()
-		}
-	}
+func (b *Brain) orderForHoldingTheBall() (msg string, orders []orders.Order) {
 }
 
 // orderForDefending returns a debug msg and a list of order for the Defending state
-func (b *Brain) orderForDefending() (msg string, orders []BasicTypes.Order) {
+func (b *Brain) orderForDefending() (msg string, orders []orders.Order) {
 	if b.ShouldIDisputeForTheBall() {
 		speed, target := b.FindBestPointInterceptBall()
-		orders = []BasicTypes.Order{b.CreateMoveOrder(target, speed)}
+		orders = []orders.Order{b.CreateMoveOrder(target, speed)}
 	} else {
 		target := b.GetActiveRegion(TeamState).Center(b.TeamPlace)
 		if b.Coords.DistanceTo(target) < units.PlayerMaxSpeed {
 			if b.Velocity.Speed > 0 {
-				orders = []BasicTypes.Order{b.CreateStopOrder(*physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
+				orders = []orders.Order{b.CreateStopOrder(*physics.NewVector(b.Coords, b.LastMsg.GameInfo.Ball.Coords))}
 			}
 		} else {
-			orders = []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(target)}
+			orders = []orders.Order{b.CreateMoveOrderMaxSpeed(target)}
 		}
 	}
 	//nothing more smart than that so far. stay stopped
@@ -145,7 +106,7 @@ func (b *Brain) orderForDefending() (msg string, orders []BasicTypes.Order) {
 }
 
 // orderForGoalkeeper returns a debug msg and a list of order for the Goalkeeper state
-func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
+func (b *Brain) orderForGoalkeeper() (msg string, orders []orders.Order) {
 	//V = Vo + at -> t = Vo/a
 	//framesToStop := units.BallMaxSpeed/units.BallDeceleration
 	// (a*t^2)/2 + v*t - s
@@ -184,21 +145,21 @@ func (b *Brain) orderForGoalkeeper() (msg string, orders []BasicTypes.Order) {
 		safePoint := physics.NewVector(poleInRisk, myGoal.Center).SetLength(maxDistanceICanRun).TargetFrom(poleInRisk)
 		distanceToSafePoint := safePoint.DistanceTo(b.Coords)
 		if distanceToSafePoint > units.PlayerMaxSpeed {
-			return "Run to best spot!", []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(safePoint)}
+			return "Run to best spot!", []orders.Order{b.CreateMoveOrderMaxSpeed(safePoint)}
 		} else if distanceToSafePoint < 5 { //just a tolerance
-			return "Be focused!!", []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
+			return "Be focused!!", []orders.Order{b.CreateStopOrder(*b.Velocity.Direction)}
 		} else {
-			return "To center", []BasicTypes.Order{b.CreateMoveOrder(safePoint, distanceToSafePoint)}
+			return "To center", []orders.Order{b.CreateMoveOrder(safePoint, distanceToSafePoint)}
 		}
 
 	} else {
 		distanceFromMiddle := b.Coords.DistanceTo(myGoal.Center)
 		if distanceFromMiddle > units.PlayerMaxSpeed {
-			return "Back to position!", []BasicTypes.Order{b.CreateMoveOrderMaxSpeed(myGoal.Center)}
+			return "Back to position!", []orders.Order{b.CreateMoveOrderMaxSpeed(myGoal.Center)}
 		} else if distanceFromMiddle < 5 { //just a tolerance
-			return "Just watch the game!", []BasicTypes.Order{b.CreateStopOrder(*b.Velocity.Direction)}
+			return "Just watch the game!", []orders.Order{b.CreateStopOrder(*b.Velocity.Direction)}
 		} else {
-			return "To center", []BasicTypes.Order{b.CreateMoveOrder(myGoal.Center, distanceFromMiddle)}
+			return "To center", []orders.Order{b.CreateMoveOrder(myGoal.Center, distanceFromMiddle)}
 		}
 	}
 }
@@ -211,7 +172,7 @@ func (b *Brain) orderAdvance() BasicTypes.Order {
 }
 
 //orderPassTheBall estimates the best team mate for receiving a ball and creates a order to pass the ball to him
-func (b *Brain) orderPassTheBall() []BasicTypes.Order {
+func (b *Brain) orderPassTheBall() []orders.Order {
 	bestCandidate := new(client.Player)
 	bestScore := 0
 	for _, playerMate := range b.GetMyTeamStatus(b.LastMsg.GameInfo).Players {
@@ -226,7 +187,7 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 
 		score := 100
 		score -= len(obstaclesFromMe) * 10
-		if len(obstaclesToGoal) == 0 && distanceToGoal < units.CourtWidth/4 {
+		if len(obstaclesToGoal) == 0 && distanceToGoal < units.FieldWidth/4 {
 			score += 40
 		} else if len(obstaclesToGoal) > 0 {
 			if obstaclesToGoal[0].DistanceTo(goalCenter) > 3.0*units.PlayerMaxSpeed {
@@ -258,7 +219,7 @@ func (b *Brain) orderPassTheBall() []BasicTypes.Order {
 	}
 	bastSpeed := b.BestSpeedToTarget(bestCandidate.Coords)
 
-	return []BasicTypes.Order{
+	return []orders.Order{
 		b.CreateStopOrder(*physics.NewVector(b.LastMsg.GameInfo.Ball.Coords, bestCandidate.Coords).Normalize()),
 		b.CreateKickOrder(bestCandidate.Coords, bastSpeed),
 	}

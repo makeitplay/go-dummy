@@ -37,8 +37,8 @@ func (d *Dummie) React() {
 		ordersSet = append(ordersSet, d.Player.CreateCatchOrder())
 	case strategy.Supporting:
 		msg, ordersSet = d.orderForSupporting()
-		//case strategy.HoldingTheBall:
-		//	msg, ordersSet = b.orderForHoldingTheBall(turn)
+	case strategy.HoldingTheBall:
+		msg, ordersSet = d.orderForHoldingTheBall()
 		//case strategy.Defending:
 		//	msg, ordersSet = b.orderForDefending(turn)
 		//	ordersSet = append(ordersSet, turn.Player().CreateCatchOrder())
