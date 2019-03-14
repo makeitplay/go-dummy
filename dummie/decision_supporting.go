@@ -13,13 +13,10 @@ func (d *Dummie) orderForSupporting() (msg string, orders []orders.Order) {
 	if d.ShouldIAssist() { // middle players will give support
 		return d.orderForActiveSupport()
 	}
-	return //d.orderForActiveSupport()
+	return d.orderForPassiveSupport()
 }
 
 func (d *Dummie) ShouldIAssist() bool {
-	if strategy.DefinePlayerRule(d.GameMsg.GameInfo.Ball.Holder.Number) <= MyRule {
-		return true
-	}
 	myDistance := d.Player.Coords.DistanceTo(d.GameMsg.GameInfo.Ball.Holder.Coords)
 	holderId := d.GameMsg.GameInfo.Ball.Holder.ID()
 	playerCloser := 0
@@ -96,6 +93,29 @@ func (d *Dummie) orderForActiveSupport() (msg string, ordersSet []orders.Order) 
 	return msg, []orders.Order{orderMove}
 }
 
+func (d *Dummie) orderForPassiveSupport() (msg string, ordersSet []orders.Order) {
+	player := d.Player
+	var region strategy.RegionCode
+	region = d.GetActiveRegion()
+
+	target := region.Center(TeamPlace)
+	if player.Coords.DistanceTo(target) < units.PlayerMaxSpeed {
+		if player.Velocity.Speed > 0 {
+			stopOrder := d.Player.CreateStopOrder(*d.Player.Velocity.Direction)
+			ordersSet = []orders.Order{stopOrder}
+		}
+	} else {
+		orderMove, err := d.Player.CreateMoveOrderMaxSpeed(target)
+		if err != nil {
+			msg = fmt.Sprintf("Sorry, I won't play this turn: %s", err)
+			d.Logger.Errorf("error creating order to passive support: %s", err)
+		} else {
+			ordersSet = []orders.Order{orderMove}
+		}
+	}
+	return msg, ordersSet
+}
+
 func FindSpotToAssist(referencesPositions []physics.Point, player *client.Player) *physics.Vector {
 	allVectors := []*physics.Vector{}
 	for _, reference := range referencesPositions {
@@ -124,94 +144,3 @@ func FindSpotToAssist(referencesPositions []physics.Point, player *client.Player
 
 	return final
 }
-
-// FindSpotToAssist finds a good region to support the ball holder
-//func FindSpotToAssist(gameMessage client.GameMessage, assisted *client.Player, assistant *Brain, offensively bool) strategy.RegionCode {
-//	var availableSpots []strategy.RegionCode
-//	var spotList []strategy.RegionCode
-//	if offensively {
-//		spotList = ListSpotsCandidatesToOffensiveAssistance(assisted, assistant)
-//	} else {
-//		spotList = ListSpotsCandidatesToDefensiveAssistance(assisted, assistant)
-//	}
-//	for _, region := range spotList {
-//		mateInTheRegion := assistant.GetPlayersInRegion(region, assistant.GetMyTeamStatus(gameMessage.GameInfo))
-//		if len(mateInTheRegion) == 0 {
-//			availableSpots = append(availableSpots, region)
-//		} else if region == assistant.GetActiveRegion(TeamState) {
-//			// eu to no meu canto, me deixe em paz
-//			availableSpots = append(availableSpots, region)
-//		} else {
-//			frankenstein := Brain{Player: mateInTheRegion[0]}
-//			isHimTheOwner := region == frankenstein.GetActiveRegion(TeamState)
-//			if !isHimTheOwner && assistant.myCurrentRegion() == region {
-//				// two invasors disputing
-//				myDistanceToTheBall := assistant.Coords.DistanceTo(assisted.Coords)
-//				invasorDistanceToTheBall := assistant.Coords.DistanceTo(mateInTheRegion[0].Coords)
-//				if myDistanceToTheBall < invasorDistanceToTheBall {
-//					availableSpots = append(availableSpots, region)
-//				}
-//			}
-//		}
-//	}
-//	sort.Slice(availableSpots, func(a, b int) bool {
-//		teamStatus := assistant.GetOpponentTeam(gameMessage.GameInfo)
-//		opponentsInA := len(assistant.GetPlayersInRegion(availableSpots[a], teamStatus))
-//		opponentsInB := len(assistant.GetPlayersInRegion(availableSpots[b], teamStatus))
-//
-//		distanceToA := math.Round(assistant.Coords.DistanceTo(availableSpots[a].Center(assistant.TeamPlace)) / strategy.RegionWidth)
-//		distanceToB := math.Round(assistant.Coords.DistanceTo(availableSpots[b].Center(assistant.TeamPlace)) / strategy.RegionWidth)
-//
-//		distanceAToAssistant := math.Round(assisted.Coords.DistanceTo(availableSpots[a].Center(assistant.TeamPlace)) / strategy.RegionWidth)
-//		distanceBToAssistant := math.Round(assisted.Coords.DistanceTo(availableSpots[b].Center(assistant.TeamPlace)) / strategy.RegionWidth)
-//
-//		APoints := distanceToB - distanceToA
-//		APoints += float64(opponentsInB - opponentsInA)
-//		APoints += distanceBToAssistant - distanceAToAssistant
-//		APoints += float64(availableSpots[a].X-availableSpots[b].X) * 2.5
-//		return APoints >= 0
-//	})
-//
-//	if len(availableSpots) > 0 {
-//		return availableSpots[0]
-//	}
-//	return assistant.GetActiveRegion(TeamState)
-//}
-
-// FindBestPointInRegionToAssist finds the best point to support the ball holder from within a region
-//func FindBestPointInRegionToAssist(gameMessage client.GameMessage, region strategy.RegionCode, assisted *client.Player) (target physics.Point) {
-//	centerPoint := region.Center(assisted.TeamPlace)
-//	vctToCenter, err := physics.NewVector(assisted.Coords, centerPoint)
-//	if err != nil {
-//		SetLength(strategy.RegionWidth)
-//	}
-//
-//	obstacles := watchOpponentOnMyRoute(gameMessage.GameInfo, assisted, vctToCenter.TargetFrom(assisted.Coords))
-//	if len(obstacles) == 0 {
-//		return vctToCenter.TargetFrom(assisted.Coords)
-//	} else {
-//		initialVector := vctToCenter
-//		avoidObstacles := func(ang float64) bool {
-//			tries := 3
-//			for tries > 0 {
-//				vctToCenter.AddAngleDegree(ang)
-//				target = vctToCenter.TargetFrom(assisted.Coords)
-//				if region != strategy.GetRegionCode(target, assisted.TeamPlace) {
-//					//too far
-//					tries = 0
-//				}
-//				obstacles = watchOpponentOnMyRoute(gameMessage.GameInfo, assisted, target)
-//				tries--
-//				if len(obstacles) <= 0 {
-//					return true
-//				}
-//			}
-//			return false
-//		}
-//
-//		if !avoidObstacles(10) && !avoidObstacles(-10) {
-//			target = initialVector.TargetFrom(assisted.Coords)
-//		}
-//	}
-//	return
-//}
