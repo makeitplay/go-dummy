@@ -21,7 +21,7 @@ func main() {
 	dummie.TeamPlace = serverConfig.TeamPlace
 	dummie.MyRule = strategy.DefinePlayerRule(serverConfig.PlayerNumber)
 	dummie.TeamBallPossession = dummie.TeamPlace
-	dummie.ClientResponser = gamer
+	dummie.ClientResponder = gamer
 
 	gamer.OnAnnouncement = reactToNewState
 	gamer.Play(dummie.GetInitialRegion().Center(serverConfig.TeamPlace), serverConfig)
@@ -45,5 +45,6 @@ func reactToNewState(ctx client.TurnContext) {
 
 		ctx.Logger().Infof("my state: %s", dummy.PlayerState)
 		dummy.React()
+		dummie.LastHolderFrom = ctx.GameMsg().Ball().Holder
 	}
 }

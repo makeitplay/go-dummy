@@ -27,7 +27,7 @@ type Brain struct {
 	TeamPlace arena.TeamPlace
 	Number    arena.PlayerNumber
 	State     PlayerState
-	Responser client.Responser
+	Responser client.Responder
 }
 
 // ProcessAnn is the callback function called when the player gets a new message from the game server

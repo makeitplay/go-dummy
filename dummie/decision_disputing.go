@@ -35,20 +35,3 @@ func (d *Dummie) orderForDisputingTheBall() (msg string, ordersSet []orders.Orde
 	}
 	return msg, ordersSet
 }
-
-func (d *Dummie) ShouldIDisputeForTheBall() bool {
-	if strategy.GetRegionCode(d.GameMsg.GameInfo.Ball.Coords, TeamPlace).ChessDistanceTo(d.GetActiveRegion()) < 2 {
-		return true
-	}
-	myDistance := d.Player.Coords.DistanceTo(d.GameMsg.GameInfo.Ball.Coords)
-	playerCloser := 0
-	for _, teamMate := range d.Player.GetMyTeamStatus(d.GameMsg.GameInfo).Players {
-		if teamMate.Number != PlayerNumber && teamMate.Coords.DistanceTo(d.GameMsg.GameInfo.Ball.Coords) < myDistance {
-			playerCloser++
-			if playerCloser > 1 { // are there more than on player closer to the ball than me?
-				return false
-			}
-		}
-	}
-	return true
-}

@@ -30,7 +30,7 @@ func (d *Dummie) orderForHoldingTheBall() (msg string, ordersSet []orders.Order)
 		PosX: player.OpponentGoal().Center.PosX,
 		PosY: player.Coords.PosY,
 	}
-	if straightForwards.DistanceTo(player.OpponentGoal().Center) < DistanceFar {
+	if math.Abs(float64(player.Coords.PosY-player.OpponentGoal().Center.PosY)) < float64(DistanceNear) {
 		straightForwards = player.OpponentGoal().Center
 	}
 
@@ -183,9 +183,15 @@ func passReceiverScore(player *client.Player, gameMsg *client.GameMessage) int {
 
 	total := 100
 
-	total -= int(distanceFromMe) / units.PlayerSize
-	total -= int(distanceFromGoal) / (units.PlayerSize * 2)
+	total -= int(distanceFromMe) / (units.PlayerSize * 2)
+	total -= int(distanceFromGoal) / (units.PlayerSize * 4)
 	total -= nearOpponents
+
+	if LastHolderFrom != nil && LastHolderFrom.Id == player.Id {
+		//we probably received the ball from this guy, so let try do not send it to him
+		total = int(0.8 * float64(total))
+	}
+
 	return total
 
 }
