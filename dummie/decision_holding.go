@@ -8,6 +8,7 @@ import (
 	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/the-dummies-go/strategy"
 	"math"
+	"sort"
 )
 
 // Shoot/Pass		MustNot			shouldNot		may			Should			Must
@@ -25,14 +26,18 @@ func (d *Dummie) orderForHoldingTheBall() (msg string, ordersSet []orders.Order)
 		return "Shoot!", []orders.Order{order}
 	}
 
-	orderToAdvance, _ := d.Player.CreateMoveOrderMaxSpeed(physics.Point{
+	straightForwards := physics.Point{
 		PosX: player.OpponentGoal().Center.PosX,
 		PosY: player.Coords.PosY,
-	})
+	}
+	if straightForwards.DistanceTo(player.OpponentGoal().Center) < DistanceFar {
+		straightForwards = player.OpponentGoal().Center
+	}
 
 	shouldIPass, candidatePlayers := fuzzyDecisionPass(player, d.GameMsg)
+	orderToAdvance, _ := d.Player.CreateMoveOrderMaxSpeed(straightForwards)
 	if shouldIPass >= Should {
-		bastCandidate := electBestCandidate(candidatePlayers)
+		bastCandidate := electBestCandidate(candidatePlayers, d.GameMsg)
 		order, _ := d.Player.CreateKickOrder(d.GameMsg.Ball(), bastCandidate.Coords, units.BallMaxSpeed)
 		return "Found a well positioned mate", []orders.Order{order}
 	}
@@ -58,6 +63,7 @@ func ShouldShoot(player *client.Player, gameMsg *client.GameMessage) (FuzzyScale
 	if err != nil {
 		return MustNot, &targetAlternative
 	}
+	// @todo needs enhancement: if an opponent player stays in our way inside the goal zone, the player won't kick neither advance
 	obstaclesToTarget, err := strategy.WatchOpponentOnMyRoute(player.Coords, shootVector.TargetFrom(player.Coords), units.BallSize, player.GetOpponentTeam(gameMsg.GameInfo))
 	if err != nil {
 		return MustNot, &targetAlternative
@@ -157,6 +163,29 @@ func FindBestPointShootTheBall(player *client.Player, gameInfo client.GameInfo) 
 	}
 }
 
-func electBestCandidate(players []*client.Player) *client.Player {
+func electBestCandidate(players []*client.Player, gameMsg *client.GameMessage) *client.Player {
+	sort.Slice(players, func(i, j int) bool {
+		return passReceiverScore(players[i], gameMsg) > passReceiverScore(players[j], gameMsg)
+	})
 	return players[0]
+}
+
+func passReceiverScore(player *client.Player, gameMsg *client.GameMessage) int {
+	ball := gameMsg.Ball()
+	distanceFromMe := ball.Coords.DistanceTo(player.Coords)
+	distanceFromGoal := DistanceForShooting(player)
+	nearOpponents := 0
+	gameMsg.ForEachPlayByTeam(player.GetOpponentPlace(), func(index int, opponent *client.Player) {
+		if opponent.Coords.DistanceTo(player.Coords) < DistanceBeside {
+			nearOpponents++
+		}
+	})
+
+	total := 100
+
+	total -= int(distanceFromMe) / units.PlayerSize
+	total -= int(distanceFromGoal) / (units.PlayerSize * 2)
+	total -= nearOpponents
+	return total
+
 }
