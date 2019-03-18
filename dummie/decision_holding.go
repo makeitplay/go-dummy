@@ -30,7 +30,7 @@ func (d *Dummie) orderForHoldingTheBall() (msg string, ordersSet []orders.Order)
 		PosX: player.OpponentGoal().Center.PosX,
 		PosY: player.Coords.PosY,
 	}
-	if math.Abs(float64(player.Coords.PosY-player.OpponentGoal().Center.PosY)) < float64(DistanceNear) {
+	if math.Abs(float64(player.Coords.PosY-player.OpponentGoal().Center.PosY)) < float64(DistanceFar) {
 		straightForwards = player.OpponentGoal().Center
 	}
 
@@ -64,7 +64,7 @@ func ShouldShoot(player *client.Player, gameMsg *client.GameMessage) (FuzzyScale
 		return MustNot, &targetAlternative
 	}
 	// @todo needs enhancement: if an opponent player stays in our way inside the goal zone, the player won't kick neither advance
-	obstaclesToTarget, err := strategy.WatchOpponentOnMyRoute(player.Coords, shootVector.TargetFrom(player.Coords), units.BallSize, player.GetOpponentTeam(gameMsg.GameInfo))
+	obstaclesToTarget, err := strategy.WatchOpponentOnMyRoute(gameMsg.Ball().Coords, shootVector.TargetFrom(player.Coords), units.BallSize, player.GetOpponentTeam(gameMsg.GameInfo))
 	if err != nil {
 		return MustNot, &targetAlternative
 	}
@@ -90,6 +90,9 @@ func fuzzyDecisionPass(player *client.Player, gameMsg *client.GameMessage) (Fuzz
 	decisionPass := MustNot
 	smallestDistance := float64(units.FieldWidth)
 	gameMsg.ForEachPlayByTeam(player.TeamPlace, func(index int, playerMate *client.Player) {
+		if playerMate.Id == player.Id {
+			return
+		}
 		targetToPlayerMate, err := physics.NewVector(player.Coords, playerMate.Coords)
 		if err != nil {
 			return
