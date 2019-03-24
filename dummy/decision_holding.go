@@ -134,18 +134,17 @@ func fuzzyDecisionPass(player *client.Player, gameMsg *client.GameMessage) (Fuzz
 	return decisionPass, candidates
 }
 
-func DistanceForShooting(player *client.Player) float64 {
-	goal := player.OpponentGoal()
+func DistanceForShooting(ball client.Ball, goal arena.Goal) float64 {
 	ref := physics.Point{
 		PosX: goal.Center.PosX,
-		PosY: player.Coords.PosY,
+		PosY: ball.Coords.PosY,
 	}
-	if player.Coords.PosY < units.GoalMinY {
+	if ball.Coords.PosY < units.GoalMinY {
 		ref = goal.BottomPole
-	} else if player.Coords.PosY > units.GoalMaxY {
+	} else if ball.Coords.PosY > units.GoalMaxY {
 		ref = goal.TopPole
 	}
-	return player.Coords.DistanceTo(ref)
+	return ball.Coords.DistanceTo(ref)
 }
 
 // FindBestPointShootTheBall find a good target in the opponent goal to shoot the ball at.
@@ -176,7 +175,7 @@ func electBestCandidate(players []*client.Player, gameMsg *client.GameMessage) *
 func passReceiverScore(player *client.Player, gameMsg *client.GameMessage) int {
 	ball := gameMsg.Ball()
 	distanceFromMe := ball.Coords.DistanceTo(player.Coords)
-	distanceFromGoal := DistanceForShooting(player)
+	distanceFromGoal := DistanceForShooting(gameMsg.Ball(), player.OpponentGoal())
 	nearOpponents := 0
 	gameMsg.ForEachPlayByTeam(player.GetOpponentPlace(), func(index int, opponent *client.Player) {
 		if opponent.Coords.DistanceTo(player.Coords) < DistanceBeside {
