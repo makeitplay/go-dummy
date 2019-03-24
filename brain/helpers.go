@@ -3,18 +3,7 @@ package brain
 import (
 	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/the-dummies-go/strategy"
-	"math"
 )
-
-// QuadraticResults resolves a quadratic function returning the x1 and x2
-func QuadraticResults(a, b, c float64) (float64, float64) {
-	// delta: B^2 -4.A.C
-	delta := math.Pow(b, 2) - 4*a*c
-	// quadratic formula: -b +/- sqrt(delta)/2a
-	t1 := (-b + math.Sqrt(delta)) / (2 * a)
-	t2 := (-b - math.Sqrt(delta)) / (2 * a)
-	return t1, t2
-}
 
 // ListSpotsCandidatesToOffensiveAssistance List the best regions around the ball holder to help him in a offensive support (closer to the attack)
 func ListSpotsCandidatesToOffensiveAssistance(assisted *client.Player, assistant *Brain) []strategy.RegionCode {

@@ -6,6 +6,8 @@ import (
 	"github.com/makeitplay/arena/units"
 	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/commons/Units"
+	"github.com/makeitplay/the-dummies-go/strategy"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"testing"
@@ -117,23 +119,45 @@ func TestFindThreatenedSpot_BallNotComing_DoesNotHitGoal(t *testing.T) {
 	assert.False(t, coming)
 }
 
-//// Best position when the ball
-//func TestFindThreatenedSpot_BestPosition_TopPoleNoRush(t *testing.T) {
-//	goal := arena.HomeTeamGoal
-//
-//	ball := client.Ball{}
-//	ball.Coords = goal.TopPole
-//	ball.Coords.PosY -= units.BallSize
-//	ball.Coords.PosX += units.GoalZoneRange
-//	ball.Velocity = physics.NewZeroedVelocity(physics.West)
-//	ball.Velocity.Speed = units.BallMaxSpeed
-//
-//	target, timeToReach, coming := findThreatenedSpot(ball, goal)
-//
-//	expectedTarget := ball.Coords
-//	expectedTarget.PosX = goal.Center.PosX
-//
-//	optimumWatchingPosition(goal, target, timeToReach)
-//	assert.True(t, coming)
-//	assert.Equal(t, expectedTarget, target)
-//}
+func TestFindThreatenedSpot_BestPosition_TopPoleNoRush(t *testing.T) {
+
+	serverConfig := new(client.Configuration)
+	serverConfig.TeamPlace = arena.HomeTeam
+	serverConfig.PlayerNumber = arena.GoalkeeperNumber
+	serverConfig.WSHost = "localhost"
+	serverConfig.WSPort = "8080"
+
+	gamer := &client.Gamer{}
+
+	PlayerNumber = serverConfig.PlayerNumber
+	TeamPlace = serverConfig.TeamPlace
+	MyRule = strategy.DefinePlayerRule(serverConfig.PlayerNumber)
+	TeamBallPossession = TeamPlace
+	ClientResponder = gamer
+
+	gamer.OnAnnouncement = func(turnTx client.TurnContext) {
+		logrus.Warn("cool")
+
+	}
+	gamer.Play(GetInitialRegion().Center(serverConfig.TeamPlace), serverConfig)
+
+	ctrl := client.NewTestController()
+
+	//goal := arena.HomeTeamGoal
+	//
+	//ball := client.Ball{}
+	//ball.Coords = goal.TopPole
+	//ball.Coords.PosY -= units.BallSize
+	//ball.Coords.PosX += units.GoalZoneRange
+	//ball.Velocity = physics.NewZeroedVelocity(physics.West)
+	//ball.Velocity.Speed = units.BallMaxSpeed
+	//
+	//target, timeToReach, coming := findThreatenedSpot(ball, goal)
+	//
+	//expectedTarget := ball.Coords
+	//expectedTarget.PosX = goal.Center.PosX
+	//
+	//optimumWatchingPosition(goal, target, timeToReach)
+	//assert.True(t, coming)
+	//assert.Equal(t, expectedTarget, target)
+}
