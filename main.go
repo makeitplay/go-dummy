@@ -35,7 +35,7 @@ func reactToNewState(ctx client.TurnContext) {
 			dummy.TeamBallPossession = ctx.GameMsg().Ball().Holder.TeamPlace
 		}
 
-		dummy := &dummy.Dummy{
+		player := &dummy.Dummy{
 			GameMsg:     ctx.GameMsg(),
 			Player:      ctx.Player(),
 			PlayerState: strategy.DetermineMyState(ctx),
@@ -43,8 +43,8 @@ func reactToNewState(ctx client.TurnContext) {
 			Logger:      ctx.Logger(),
 		}
 
-		ctx.Logger().Infof("my state: %s", dummy.PlayerState)
-		dummy.React()
+		ctx.Logger().Infof("my state: %s", player.PlayerState)
+		player.React()
 		dummy.LastHolderFrom = ctx.GameMsg().Ball().Holder
 	}
 }
