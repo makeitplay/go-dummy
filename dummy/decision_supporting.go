@@ -1,4 +1,4 @@
-package dummie
+package dummy
 
 import (
 	"fmt"
@@ -9,14 +9,14 @@ import (
 	"github.com/makeitplay/the-dummies-go/strategy"
 )
 
-func (d *Dummie) orderForSupporting() (msg string, orders []orders.Order) {
+func (d *Dummy) orderForSupporting() (msg string, orders []orders.Order) {
 	if d.ShouldIAssist() { // middle players will give support
 		return d.orderForActiveSupport()
 	}
 	return d.orderForPassiveSupport()
 }
 
-func (d *Dummie) ShouldIAssist() bool {
+func (d *Dummy) ShouldIAssist() bool {
 	myDistance := d.Player.Coords.DistanceTo(d.GameMsg.GameInfo.Ball.Holder.Coords)
 	holderId := d.GameMsg.GameInfo.Ball.Holder.ID()
 	playerCloser := 0
@@ -36,7 +36,7 @@ func (d *Dummie) ShouldIAssist() bool {
 	return shouldAssist
 }
 
-func (d *Dummie) orderForActiveSupport() (msg string, ordersSet []orders.Order) {
+func (d *Dummy) orderForActiveSupport() (msg string, ordersSet []orders.Order) {
 	ballPosition := d.GameMsg.GameInfo.Ball.Holder.Coords
 	holderId := d.GameMsg.GameInfo.Ball.Holder.ID()
 	referencies := []physics.Point{ballPosition}
@@ -93,7 +93,7 @@ func (d *Dummie) orderForActiveSupport() (msg string, ordersSet []orders.Order) 
 	return msg, []orders.Order{orderMove}
 }
 
-func (d *Dummie) orderForPassiveSupport() (msg string, ordersSet []orders.Order) {
+func (d *Dummy) orderForPassiveSupport() (msg string, ordersSet []orders.Order) {
 	player := d.Player
 	var region strategy.RegionCode
 	region = d.GetActiveRegion()

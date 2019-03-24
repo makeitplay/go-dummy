@@ -1,4 +1,4 @@
-package dummie
+package dummy
 
 import "github.com/makeitplay/arena/units"
 

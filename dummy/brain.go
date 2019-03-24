@@ -1,4 +1,4 @@
-package dummie
+package dummy
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ var LastHolderFrom *client.Player
 // TeamBallPossession stores the team's name that has touched on the ball for the last time
 var TeamBallPossession arena.TeamPlace
 
-type Dummie struct {
+type Dummy struct {
 	GameMsg     *client.GameMessage
 	Player      *client.Player
 	TeamState   strategy.TeamState
@@ -26,30 +26,31 @@ type Dummie struct {
 	Logger      *logrus.Entry
 }
 
-func (d *Dummie) React() {
+func (d *Dummy) React() {
 	var ordersSet []orders.Order
 	var msg string
-	//if d.Player.IsGoalkeeper() {
-	//	msg, ordersSet = d.orderForGoalkeeper()
-	//} else {
-	switch d.PlayerState {
-	case strategy.DisputingTheBall:
-		msg, ordersSet = d.orderForDisputingTheBall()
-		ordersSet = append(ordersSet, d.Player.CreateCatchOrder())
-	case strategy.Supporting:
-		msg, ordersSet = d.orderForSupporting()
-	case strategy.HoldingTheBall:
-		msg, ordersSet = d.orderForHoldingTheBall()
-	case strategy.Defending:
-		msg, ordersSet = d.orderForDefending()
-		ordersSet = append(ordersSet, d.Player.CreateCatchOrder())
+	if d.Player.IsGoalkeeper() {
+		msg, ordersSet = d.orderForGoalkeeper()
+	} else {
+		switch d.PlayerState {
+		case strategy.DisputingTheBall:
+			msg, ordersSet = d.orderForDisputingTheBall()
+			ordersSet = append(ordersSet, d.Player.CreateCatchOrder())
+		case strategy.Supporting:
+			msg, ordersSet = d.orderForSupporting()
+		case strategy.HoldingTheBall:
+			msg, ordersSet = d.orderForHoldingTheBall()
+		case strategy.Defending:
+			msg, ordersSet = d.orderForDefending()
+			ordersSet = append(ordersSet, d.Player.CreateCatchOrder())
+		}
 	}
 
 	ClientResponder.SendOrders(fmt.Sprintf("%s %s", d.Player.ID(), msg), ordersSet...)
 }
 
 // @todo Needs enhancement: the player does not consider the position of the other supporters, so if two players are behind the opponent it does not try to help
-func (d *Dummie) ShouldIDisputeForTheBall() bool {
+func (d *Dummy) ShouldIDisputeForTheBall() bool {
 	if strategy.GetRegionCode(d.GameMsg.GameInfo.Ball.Coords, TeamPlace).ChessDistanceTo(d.GetActiveRegion()) < 2 {
 		return true
 	}

@@ -1,4 +1,4 @@
-package dummie
+package dummy
 
 import (
 	"github.com/makeitplay/arena"
@@ -17,7 +17,7 @@ import (
 // May				*				*				*			Pass			Pass
 // Should			Shoot			Shoot			Shoot		Shoot			Shoot
 // Must				Shoot			Shoot			Shoot		Shoot			Shoot
-func (d *Dummie) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) {
+func (d *Dummy) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) {
 	player := d.Player
 
 	shouldIShoot, target := ShouldShoot(player, d.GameMsg)
@@ -53,7 +53,7 @@ func (d *Dummie) orderForHoldingTheBall() (msg string, ordersSet []orders.Order)
 }
 
 func ShouldShoot(player *client.Player, gameMsg *client.GameMessage) (FuzzyScale, *physics.Point) {
-	distanceToShoot := DistanceForShooting(player)
+	distanceToShoot := DistanceForShooting(gameMsg.Ball(), player.OpponentGoal())
 	if distanceToShoot >= DistanceFar {
 		return MustNot, nil
 	}
