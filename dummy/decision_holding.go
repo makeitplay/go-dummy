@@ -35,7 +35,10 @@ func (d *Dummy) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) 
 	}
 
 	shouldIPass, candidatePlayers := fuzzyDecisionPass(player, d.GameMsg)
-	orderToAdvance, _ := d.Player.CreateMoveOrderMaxSpeed(straightForwards)
+	orderToAdvance, err := d.Player.CreateMoveOrderMaxSpeed(straightForwards)
+	if err != nil {
+		return "something it wrong", []orders.Order{d.Player.CreateStopOrder(*player.Velocity.Direction)}
+	}
 	if shouldIPass >= Should {
 		bastCandidate := electBestCandidate(candidatePlayers, d.GameMsg)
 		order, _ := d.Player.CreateKickOrder(d.GameMsg.Ball(), bastCandidate.Coords, units.BallMaxSpeed)
@@ -47,9 +50,7 @@ func (d *Dummy) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) 
 	}
 
 	//from this point we know we should not pass, and we may shoot but it is probably a bad idea
-	return "do not stop to swimming", []orders.Order{orderToAdvance}
-
-	return
+	return "just keep swimming", []orders.Order{orderToAdvance}
 }
 
 func ShouldShoot(player *client.Player, gameMsg *client.GameMessage) (FuzzyScale, *physics.Point) {
@@ -155,12 +156,12 @@ func FindBestPointShootTheBall(player *client.Player, gameInfo client.GameInfo) 
 	if goalkeeper.Coords.PosY > goal.Center.PosY {
 		return physics.Point{
 			PosX: goal.BottomPole.PosX,
-			PosY: goal.BottomPole.PosY + units.BallSize,
+			PosY: goal.BottomPole.PosY + (units.BallSize / 2),
 		}
 	} else {
 		return physics.Point{
 			PosX: goal.TopPole.PosX,
-			PosY: goal.TopPole.PosY - units.BallSize,
+			PosY: goal.TopPole.PosY - (units.BallSize / 2),
 		}
 	}
 }
