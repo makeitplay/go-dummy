@@ -1,6 +1,7 @@
 package strategy
 
 import (
+	"errors"
 	"fmt"
 	"github.com/makeitplay/arena"
 	"github.com/makeitplay/arena/physics"
@@ -109,4 +110,17 @@ func WatchOpponentOnMyRoute(origin, target physics.Point, margin float64, oppone
 	})
 
 	return collisionPoints, nil
+}
+
+// QuadraticResults resolves a quadratic function returning the x1 and x2
+func QuadraticResults(a, b, c float64) (float64, float64, error) {
+	if a == 0 {
+		return 0, 0, errors.New("a cannot be zero")
+	}
+	// delta: B^2 -4.A.C
+	delta := math.Pow(b, 2) - 4*a*c
+	// quadratic formula: -b +/- sqrt(delta)/2a
+	t1 := (-b + math.Sqrt(delta)) / (2 * a)
+	t2 := (-b - math.Sqrt(delta)) / (2 * a)
+	return t1, t2, nil
 }
