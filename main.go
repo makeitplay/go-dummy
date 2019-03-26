@@ -8,6 +8,10 @@ import (
 	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/the-dummies-go/dummy"
 	"github.com/makeitplay/the-dummies-go/strategy"
+	"github.com/sirupsen/logrus"
+	"log"
+	"os"
+	"os/signal"
 )
 
 func main() {
@@ -24,7 +28,19 @@ func main() {
 	dummy.ClientResponder = gamer
 
 	gamer.OnAnnouncement = reactToNewState
-	gamer.Play(dummy.GetInitialRegion().Center(serverConfig.TeamPlace), serverConfig)
+
+	if err := gamer.Play(dummy.GetInitialRegion().Center(serverConfig.TeamPlace), serverConfig); err != nil {
+		log.Fatal(err)
+	}
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	select {
+	case <-signalChan:
+		logrus.Print("*********** INTERRUPTION SIGNAL ****************")
+		gamer.StopToPlay(true)
+	}
+
 }
 
 func reactToNewState(ctx client.TurnContext) {
