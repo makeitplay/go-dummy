@@ -175,23 +175,6 @@ func TestFindThreatenedSpot_BestPosition_TopPoleNoRush(t *testing.T) {
 	}
 	gamer.Play(GetInitialRegion().Center(serverConfig.TeamPlace), serverConfig)
 
-	//goal := arena.HomeTeamGoal
-	//
-	//ball := client.Ball{}
-	//ball.Coords = goal.TopPole
-	//ball.Coords.PosY -= units.BallSize
-	//ball.Coords.PosX += units.GoalZoneRange
-	//ball.Velocity = physics.NewZeroedVelocity(physics.West)
-	//ball.Velocity.Speed = units.BallMaxSpeed
-	//
-	//target, timeToReach, coming := findThreatenedSpot(ball, goal)
-	//
-	//expectedTarget := ball.Coords
-	//expectedTarget.PosX = goal.Center.PosX
-	//
-	//optimumWatchingPosition(goal, target, timeToReach)
-	//assert.True(t, coming)
-	//assert.Equal(t, expectedTarget, target)
 }
 
 func TestIntegration_KeeperShouldCatch_atCenterFromCenter(t *testing.T) {
@@ -200,7 +183,7 @@ func TestIntegration_KeeperShouldCatch_atCenterFromCenter(t *testing.T) {
 	}
 
 	ballInitialPosition := arena.HomeTeamGoal.Center
-	ballInitialPosition.PosX += Units.GoalZoneRange + 1 //avoiding the ball be kicked out after "BallTimeInGoalZone" frames
+	ballInitialPosition.PosX += Units.GoalZoneRange
 	ballVelocity := physics.NewZeroedVelocity(physics.West)
 	ballVelocity.Speed = units.BallMaxSpeed
 
@@ -234,62 +217,3 @@ func TestIntegration_KeeperShouldCatch_atCenterFromCenter(t *testing.T) {
 	assert.Equal(t, ballState.Holder.TeamPlace, arena.HomeTeam)
 	assert.Equal(t, ballState.Holder.Number, arena.GoalkeeperNumber)
 }
-
-func TestIntegration_KeeperShouldCatch_atTopFromCenter(t *testing.T) {
-
-	ballInitialPosition := arena.HomeTeamGoal.Center
-	ballInitialPosition.PosX += Units.GoalZoneRange + Units.BallSize //avoiding the ball be kicked out after "BallTimeInGoalZone" frames
-	ballVelocity := physics.NewZeroedVelocity(physics.West)
-	ballVelocity.Speed = units.BallMaxSpeed
-
-	shootTarget := arena.HomeTeamGoal.TopPole
-	shootTarget.PosY -= 1
-	shootTop, _ := physics.NewVector(ballInitialPosition, shootTarget)
-	ballVelocity = physics.NewZeroedVelocity(*shootTop)
-	ballVelocity.Speed = units.BallMaxSpeed
-
-	gameStat, err := Controller.SetBallProperties(ballVelocity, ballInitialPosition)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ballState := gameStat.Ball()
-
-	for ballState.Velocity.Speed > 0 {
-		turnCtx, err := Controller.GetGamerCtx(arena.HomeTeam, arena.GoalkeeperNumber)
-		if err != nil {
-			t.Fatal(err)
-		}
-		player := &Dummy{
-			GameMsg: turnCtx.GameMsg(),
-			Player:  turnCtx.Player(),
-		}
-
-		_, orderList := player.orderForGoalkeeper()
-		Controller.SendOrders(arena.HomeTeam, arena.GoalkeeperNumber, orderList)
-		newState, _ := Controller.NextTurn()
-		ballState = newState.Ball()
-	}
-	if ballState.Holder == nil {
-		t.Fatal("should had caught the ball. Top")
-	}
-
-	assert.Equal(t, ballState.Holder.TeamPlace, arena.HomeTeam)
-	assert.Equal(t, ballState.Holder.Number, arena.GoalkeeperNumber)
-}
-
-//ctrl.ResetScore()
-//ctrl.SendOrders(arena.HomeTeam, arena.GoalkeeperNumber, []orders.Order{
-//
-//})
-//
-//for gameStat.Ball().Velocity.Speed > 0 {
-//	ctrl.ResetScore()
-//	gameStat, err = ctrl.NextTurn()
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	v := gameStat.Ball().Velocity
-//	logrus.Infof("Ball velocity %v", &v)
-//	ctrl.SetGameTurn( 100)
-//}
-//}

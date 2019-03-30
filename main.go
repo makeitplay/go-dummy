@@ -18,6 +18,7 @@ func main() {
 	rand.Seed(time.Now().Unix())
 	serverConfig := new(client.Configuration)
 	serverConfig.ParseFromFlags()
+	serverConfig.LogLevel = logrus.DebugLevel
 
 	gamer := &client.Gamer{}
 

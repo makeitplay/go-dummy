@@ -44,7 +44,7 @@ func stayAtGoalCenter(player *client.Player) []orders.Order {
 	return []orders.Order{order}
 }
 
-func findThreatenedSpot(ball client.Ball, goal arena.Goal) (target physics.Point, timeToReach int, coming bool) {
+func findThreatenedSpot(ball client.Ball, goal arena.Goal) (target physics.Point, framesToReach int, coming bool) {
 	ballSpeed := ball.Velocity.Speed
 	ballXSpeed := ball.Velocity.Direction.Cos() * ballSpeed
 	ballYSpeed := ball.Velocity.Direction.Sin() * ballSpeed
@@ -74,22 +74,23 @@ func findThreatenedSpot(ball client.Ball, goal arena.Goal) (target physics.Point
 	if err != nil {
 		return
 	}
-	timeToReach = int(t1) // truncating as integer because our time is calculated on frames
+	realTimeToReach := t1 // truncating as integer because our time is calculated on frames
 	if t1 <= 0 || (t2 > 0 && t2 < t1) {
-		timeToReach = int(t2)
+		realTimeToReach = t2
 	}
 
-	if timeToReach <= 0 {
+	if realTimeToReach < 0 {
 		return
 	}
+	framesToReach = int(math.Ceil(realTimeToReach))
 
 	// if the ball was kicked, let find the target based on its velocity
 	//S: required
 	//So: Actual ball Y coord
 	//V: ballYSpeed
-	//T:  "timeToReach"
+	//T:  "realTimeToReach"
 	//a: deceleration of the ball
-	coordY := float64(ball.Coords.PosY) + (ballYSpeed * float64(timeToReach)) + (a/2)*math.Pow(float64(timeToReach), 2)
+	coordY := float64(ball.Coords.PosY) + (ballYSpeed * realTimeToReach) + (a/2)*math.Pow(realTimeToReach, 2)
 
 	target = physics.Point{
 		PosX: goal.Center.PosX,
@@ -115,15 +116,12 @@ func catchingTheBall(keeper *client.Player, ballGoalTarget physics.Point, timeAv
 	}
 
 	timeToCatch := int(distanceFromTarget / units.PlayerMaxSpeed)
-	if timeToCatch < timeAvailable {
-		jumpMaxDistance := units.GoalKeeperJumpDuration * units.GoalKeeperJumpSpeed
-		if distanceFromTarget > jumpMaxDistance { //too far to jump yet
-			idealSpeed := distanceFromTarget / units.GoalKeeperJumpDuration //we need ensure the jump won't be beyond the target
-			jump, _ := keeper.CreateJumpOrder(ballGoalTarget, idealSpeed)
-			return []orders.Order{
-				jump,
-				keeper.CreateCatchOrder(),
-			}
+	if timeAvailable <= units.GoalKeeperJumpDuration && timeToCatch > timeAvailable {
+		idealSpeed := distanceFromTarget / units.GoalKeeperJumpDuration //we need ensure the jump won't be beyond the target
+		jump, _ := keeper.CreateJumpOrder(ballGoalTarget, idealSpeed)
+		return []orders.Order{
+			jump,
+			keeper.CreateCatchOrder(),
 		}
 	}
 
