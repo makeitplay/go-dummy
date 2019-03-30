@@ -12,7 +12,7 @@ As this name suggest, **The Dummies** are not that smart, but they may play well
 
 0. Docker >= 18.03 (https://docs.docker.com/install/)
 0. Docker Compose >= 1.21 (https://docs.docker.com/compose/install/)
-0. Go Lang >= 1.10 (https://golang.org/doc/install)
+0. Go Lang >= 1.12 (https://golang.org/doc/install)
 
 ### Usage 
 
@@ -20,7 +20,7 @@ You have two ways to make The Dummies play, they are described below.
 However, in both ways we will need to start the game server first:
 
 ```bash
-    docker run -p 8080:8080  makeitplay/football:1.0.0-alpha
+    docker run -p 8080:8080 -it  makeitplay/football:1.0.0-alpha
 ```
 
 Then you may start The Dummies **and** the other team.
