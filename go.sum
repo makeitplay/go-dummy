@@ -12,6 +12,9 @@ github.com/makeitplay/arena v0.0.3-beta h1:bsgjD4jXKA0jIRyFiDIW5i3VYJRrRf3GlxuGE
 github.com/makeitplay/arena v0.0.3-beta/go.mod h1:4sArs089qSLEk0xmPfHPyUzf3VrguseBXlrT0cpIHn4=
 github.com/makeitplay/client-player-go v0.0.0-20190330034655-070f6df936de h1:u0eSC68dcW8W5JGSLYMQEOTvzwqnyaDs+edbq4FeDQ4=
 github.com/makeitplay/client-player-go v0.0.0-20190330034655-070f6df936de/go.mod h1:6Blpl7ATjRsHo4skzAqEXF+d5iebgMinXZLbtV1gv1o=
+github.com/makeitplay/client-player-go v0.0.0-20190330140506-8448fe29aade h1:rSHbBWqXbTUKezS+O+XVriWCUZaaw7zrYYPRXptBT94=
+github.com/makeitplay/client-player-go v0.0.0-20190330140506-8448fe29aade/go.mod h1:6Blpl7ATjRsHo4skzAqEXF+d5iebgMinXZLbtV1gv1o=
+github.com/makeitplay/commons v0.0.3-beta h1:CV/Cf9dmZ9zpMVVnhmVi+pS61z7mLGYx8hZrXzPezKs=
 github.com/mattn/go-colorable v0.1.1 h1:G1f5SKeVxmagw/IyvzvtZE4Gybcc4Tr1tf7I8z0XgOg=
 github.com/mattn/go-colorable v0.1.1/go.mod h1:FuOcm+DKB9mbwrcAfNl7/TZVBZ6rcnceauSikq3lYCQ=
 github.com/mattn/go-isatty v0.0.5/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=

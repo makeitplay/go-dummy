@@ -1,13 +1,10 @@
-FROM golang:1.10 AS build
+FROM golang:1.12 AS build
 
-RUN go get github.com/golang/dep/cmd/dep
+COPY .  /the-dummies-go
 
-COPY .  /go/src/github.com/makeitplay/the-dummies-go
+WORKDIR /bin/the-dummies-go
 
-WORKDIR /go/src/github.com/makeitplay/the-dummies-go
-
-RUN dep ensure
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /bin/the-dummies-go
+RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /bin/the-dummies-go
 
 FROM scratch
 COPY --from=build /bin/the-dummies-go /bin/the-dummies-go
