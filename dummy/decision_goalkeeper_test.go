@@ -6,7 +6,6 @@ import (
 	"github.com/makeitplay/arena/physics"
 	"github.com/makeitplay/arena/units"
 	"github.com/makeitplay/client-player-go"
-	"github.com/makeitplay/commons/Units"
 	"github.com/makeitplay/the-dummies-go/strategy"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -105,7 +104,7 @@ func TestFindThreatenedSpot_BallNotComing_Stopped(t *testing.T) {
 	ball := client.Ball{}
 	ball.Velocity = physics.NewZeroedVelocity(physics.West)
 	ball.Coords = goal.Center
-	ball.Coords.PosX += Units.GoalZoneRange
+	ball.Coords.PosX += units.GoalZoneRange
 
 	_, _, coming := findThreatenedSpot(ball, goal)
 	assert.False(t, coming)
@@ -118,7 +117,7 @@ func TestFindThreatenedSpot_BallNotComing_DiffDirection(t *testing.T) {
 	ball.Velocity = physics.NewZeroedVelocity(physics.North)
 	ball.Velocity.Speed = units.BallMaxSpeed
 	ball.Coords = goal.Center
-	ball.Coords.PosX += Units.GoalZoneRange
+	ball.Coords.PosX += units.GoalZoneRange
 
 	_, _, coming := findThreatenedSpot(ball, goal)
 	assert.False(t, coming)
@@ -130,7 +129,7 @@ func TestFindThreatenedSpot_BallNotComing_OppositeDirection(t *testing.T) {
 	ball.Velocity = physics.NewZeroedVelocity(physics.East)
 	ball.Velocity.Speed = units.BallMaxSpeed
 	ball.Coords = goal.Center
-	ball.Coords.PosX += Units.GoalZoneRange
+	ball.Coords.PosX += units.GoalZoneRange
 
 	_, _, coming := findThreatenedSpot(ball, goal)
 	assert.False(t, coming)
@@ -141,7 +140,7 @@ func TestFindThreatenedSpot_BallNotComing_DoesNotHitGoal(t *testing.T) {
 
 	ball := client.Ball{}
 	ball.Coords = goal.Center
-	ball.Coords.PosX += Units.GoalZoneRange
+	ball.Coords.PosX += units.GoalZoneRange
 
 	wrongTarget := goal.TopPole
 	wrongTarget.PosY += units.BallSize * 2
@@ -183,7 +182,7 @@ func TestIntegration_KeeperShouldCatch_atCenterFromCenter(t *testing.T) {
 	}
 
 	ballInitialPosition := arena.HomeTeamGoal.Center
-	ballInitialPosition.PosX += Units.GoalZoneRange
+	ballInitialPosition.PosX += units.GoalZoneRange
 	ballVelocity := physics.NewZeroedVelocity(physics.West)
 	ballVelocity.Speed = units.BallMaxSpeed
 
