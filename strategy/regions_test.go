@@ -37,6 +37,7 @@ func TestGetRegionCode(t *testing.T) {
 func TestGetRegionCenter(t *testing.T) {
 	halfRegionHeight := RegionHeight / 2
 	halfRegionWidth := RegionWidth / 2
+
 	center := RegionCode{0, 0}.Center(arena.HomeTeam)
 	assert.Equal(t, halfRegionWidth, center.PosX)
 	assert.Equal(t, halfRegionHeight, center.PosY)
