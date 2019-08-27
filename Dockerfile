@@ -1,12 +1,12 @@
 FROM golang:1.12 AS build
 
-COPY .  /the-dummies-go
+COPY .  /my-bot
 
-WORKDIR /the-dummies-go
+WORKDIR /my-bot
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /bin/the-dummies-go main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /bin/my-bot main.go
 
 FROM scratch
-COPY --from=build /bin/the-dummies-go /bin/the-dummies-go
-ENTRYPOINT ["/bin/the-dummies-go"]
+COPY --from=build /bin/my-bot /bin/my-bot
+ENTRYPOINT ["/bin/my-bot"]
 CMD []
