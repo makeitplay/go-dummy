@@ -1,8 +1,8 @@
 version: '3.4'
 services:
   game_server:
-    image: makeitplay/football:1.0.0-alpha
-    command:  -dev-mode -start-mode=delay
+    image: makeitplay/football:1.0.5
+    command: play --dev-mode --timer-mode=delay
     networks:
       - home_01
       - home_02
