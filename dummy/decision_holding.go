@@ -1,15 +1,26 @@
 package dummy
 
 import (
+	"fmt"
 	"github.com/makeitplay/arena"
 	"github.com/makeitplay/arena/orders"
 	"github.com/makeitplay/arena/physics"
 	"github.com/makeitplay/arena/units"
 	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/the-dummies-go/strategy"
+	"k8s.io/apimachinery/pkg/util/rand"
 	"math"
 	"sort"
+	"time"
 )
+
+var GameConfig *client.Configuration
+
+var WaitingAnswer bool
+var TunnelMsg chan client.GameMessage
+
+var LastSuggestion string
+var Passing bool
 
 // Shoot/Pass		MustNot			shouldNot		may			Should			Must
 // MustNot			Advance			Advance			Advance		Pass			Pass
@@ -19,6 +30,71 @@ import (
 // Must				Shoot			Shoot			Shoot		Shoot			Shoot
 func (d *Dummy) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) {
 	player := d.Player
+
+	if rand.Int()%100 < 5 {
+		question := client.TrainingQuestion{
+			Question:   "What should I do now?",
+			QuestionId: fmt.Sprintf("%s-%s", d.Player.Id, time.Now()),
+			PlayerId:   d.Player.ID(),
+			Alternatives: []string{
+				"pass",
+				"shoot",
+				"run",
+				"ignore",
+			},
+		}
+		if err := client.AskQuestion(question, *GameConfig); err == nil {
+			d.Logger.Warn("question sent")
+			TunnelMsg = make(chan client.GameMessage)
+			WaitingAnswer = true
+			d.Logger.Warnf("Bora esperar! ")
+			var answer string
+			for WaitingAnswer {
+				select {
+				case debugMsg := <-TunnelMsg:
+					var ok bool
+					if answer, ok = debugMsg.Data[question.QuestionId].(string); ok {
+						d.Logger.Warnf("Got the answer! %s", answer)
+						d.Logger.Warnf("Recebeu")
+						WaitingAnswer = false
+					} else {
+						d.Logger.Warnf("Not yet")
+					}
+				}
+			}
+			straightForwards := physics.Point{
+				PosX: player.OpponentGoal().Center.PosX,
+				PosY: player.Coords.PosY,
+			}
+			if math.Abs(float64(player.Coords.PosY-player.OpponentGoal().Center.PosY)) < float64(DistanceFar) {
+				straightForwards = player.OpponentGoal().Center
+			}
+			orderToAdvance, _ := d.Player.CreateMoveOrderMaxSpeed(straightForwards)
+
+			switch answer {
+			case "pass":
+				_, candidatePlayers := fuzzyDecisionPass(player, d.GameMsg)
+				if len(candidatePlayers) > 0 {
+					bastCandidate := electBestCandidate(candidatePlayers, d.GameMsg)
+					order, _ := d.Player.CreateKickOrder(d.GameMsg.Ball(), bastCandidate.Coords, units.BallMaxSpeed)
+					return "Ok mestre! Passando", []orders.Order{order}
+				}
+				return "Sorry mestre, canot pass", []orders.Order{orderToAdvance}
+			case "shoot":
+				_, target := ShouldShoot(player, d.GameMsg)
+				if target == nil {
+					*target = player.OpponentGoal().Center
+				}
+				order, _ := d.Player.CreateKickOrder(d.GameMsg.Ball(), *target, units.BallMaxSpeed)
+				Passing = true
+				return "OK mestre shhoting hoot!", []orders.Order{order}
+			case "run":
+
+				return "Go go go, o mestre mandou", []orders.Order{orderToAdvance}
+			}
+
+		}
+	}
 
 	shouldIShoot, target := ShouldShoot(player, d.GameMsg)
 	if shouldIShoot >= Should {
@@ -42,6 +118,7 @@ func (d *Dummy) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) 
 	if shouldIPass >= Should {
 		bastCandidate := electBestCandidate(candidatePlayers, d.GameMsg)
 		order, _ := d.Player.CreateKickOrder(d.GameMsg.Ball(), bastCandidate.Coords, units.BallMaxSpeed)
+		Passing = true
 		return "Found a well positioned mate", []orders.Order{order}
 	}
 
@@ -94,12 +171,12 @@ func fuzzyDecisionPass(player *client.Player, gameMsg *client.GameMessage) (Fuzz
 		if playerMate.Id == player.Id {
 			return
 		}
-		targetToPlayerMate, err := physics.NewVector(player.Coords, playerMate.Coords)
-		if err != nil {
-			return
-		}
+		//targetToPlayerMate, err := physics.NewVector(player.Coords, playerMate.Coords)
+		//if err != nil {
+		//	return
+		//}
 		distanceFromMe := player.Coords.DistanceTo(playerMate.Coords)
-		obstaclesToPlayer, err := strategy.WatchOpponentOnMyRoute(player.Coords, targetToPlayerMate.TargetFrom(player.Coords), units.BallSize, player.GetOpponentTeam(gameMsg.GameInfo))
+		obstaclesToPlayer, err := strategy.WatchOpponentOnMyRoute(gameMsg.Ball().Coords, playerMate.Coords, units.BallSize/2, player.GetOpponentTeam(gameMsg.GameInfo))
 		if err != nil || len(obstaclesToPlayer) > 0 {
 			return //no decision bases on this player mate
 		}
@@ -188,6 +265,7 @@ func passReceiverScore(player *client.Player, gameMsg *client.GameMessage) int {
 
 	total -= int(distanceFromMe) / (units.PlayerSize * 2)
 	total -= int(distanceFromGoal) / (units.PlayerSize * 4)
+	// change the calc to only penalise when the opponent it between the player and the goal.
 	total -= nearOpponents
 
 	if LastHolderFrom != nil && LastHolderFrom.Id == player.Id {

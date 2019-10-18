@@ -11,7 +11,6 @@ require (
 	github.com/golang/mock v1.3.1
 	github.com/lovoo/goka v0.1.3
 	github.com/makeitplay/arena v1.0.0
-	github.com/makeitplay/client-player-go v1.0.0
 	github.com/samuel/go-zookeeper v0.0.0-20190810000440-0ceca61e4d75 // indirect
 	github.com/sirupsen/logrus v1.4.0
 	github.com/stretchr/testify v1.3.0

@@ -7,7 +7,7 @@ import (
 
 func (d *Dummy) orderForDisputingTheBall() (msg string, ordersSet []orders.Order) {
 	player := d.Player
-	if d.ShouldIDisputeForTheBall() {
+	if !Passing && d.ShouldIDisputeForTheBall() {
 		msg = "Disputing for the ball"
 		//orders = []orders.Order{d.CreateMoveOrderMaxSpeed(d.LastMsg.GameInfo.Ball.Coords)}
 		speed, target := strategy.FindBestPointInterceptBall(d.GameMsg.Ball(), player)

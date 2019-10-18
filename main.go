@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/makeitplay/arena/orders"
 	"math/rand"
 	"time"
 
@@ -19,7 +20,7 @@ func main() {
 	serverConfig := new(client.Configuration)
 	serverConfig.ParseFromFlags()
 	serverConfig.LogLevel = logrus.DebugLevel
-
+	dummy.GameConfig = serverConfig
 	gamer := &client.Gamer{}
 
 	dummy.PlayerNumber = serverConfig.PlayerNumber
@@ -28,11 +29,29 @@ func main() {
 	dummy.TeamBallPossession = dummy.TeamPlace
 	dummy.ClientResponder = gamer
 
-	gamer.OnAnnouncement = reactToNewState
+	//gamer.OnAnnouncement = reactToNewState
 
 	gamerCtx, err := gamer.Play(dummy.GetInitialRegion().Center(serverConfig.TeamPlace), serverConfig)
 	if err != nil {
 		log.Fatal(err)
+	}
+	gamer.OnMessage = func(msg client.GameMessage) {
+		go func() {
+			logrus.Warnf("SOME MSG MSG! %v (%v)", msg.Type, msg.Data)
+			switch msg.Type {
+			case orders.ANSWER:
+				logrus.Warnf("DEBUG MSG! %v (%v)", dummy.WaitingAnswer, msg.Data)
+				if dummy.WaitingAnswer {
+					dummy.TunnelMsg <- msg
+				} else {
+					logrus.Warnf("Not for me")
+				}
+			case orders.ANNOUNCEMENT:
+				reactToNewState(gamerCtx.CreateTurnContext(msg))
+			case orders.RIP:
+				gamer.StopToPlay(true)
+			}
+		}()
 	}
 
 	signalChan := make(chan os.Signal, 1)

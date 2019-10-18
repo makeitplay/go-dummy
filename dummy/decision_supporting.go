@@ -22,7 +22,7 @@ func (d *Dummy) ShouldIAssist() bool {
 	playerCloser := 0
 
 	shouldAssist := true
-	// shoul have at least 3 supporters in the perimeters around the ball holder
+	// should have at least 3 supporters in the perimeters around the ball holder
 	d.GameMsg.ForEachPlayByTeam(TeamPlace, func(index int, player *client.Player) {
 		if player.ID() != holderId && // the holder cannot help himself
 			player.Number != PlayerNumber && // I wont count to myself
@@ -39,18 +39,18 @@ func (d *Dummy) ShouldIAssist() bool {
 func (d *Dummy) orderForActiveSupport() (msg string, ordersSet []orders.Order) {
 	ballPosition := d.GameMsg.GameInfo.Ball.Holder.Coords
 	holderId := d.GameMsg.GameInfo.Ball.Holder.ID()
-	referencies := []physics.Point{ballPosition}
+	references := []physics.Point{ballPosition}
 
 	d.GameMsg.ForEachPlayByTeam(TeamPlace, func(index int, player *client.Player) {
 		if player.ID() != holderId && // the holder cannot help himself
 			player.Number != PlayerNumber && // I wont count to myself
 			//player.Coords.DistanceTo(d.GameMsg.GameInfo.Ball.Coords) <= DistanceNear && //the guys who are already supporting
 			player.Coords.DistanceTo(d.Player.Coords) < DistanceBeside {
-			referencies = append(referencies, player.Coords)
+			references = append(references, player.Coords)
 		}
 	})
 
-	target := FindSpotToAssist(referencies, d.Player)
+	target := FindSpotToAssist(references, d.Player)
 
 	if target == nil {
 		msg = "I am already in a good position"
