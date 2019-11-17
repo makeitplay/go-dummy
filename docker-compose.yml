@@ -1,8 +1,8 @@
 version: '3.4'
 services:
   game_server:
-    image: makeitplay/football:1.0.0-alpha
-    command:  -debug
+    image: lugobots/server:v1.1-rc.0
+    command: play --dev-mode
     networks:
       - team_01
       - team_02
@@ -21,6 +21,7 @@ services:
   player_01:
     image: ${TEAM_IMAGE}
     command:  -team=${TEAM_PLACE} -number=1 -wshost=game_server
+    restart: always
     networks:
       - team_01
     depends_on:
@@ -28,6 +29,7 @@ services:
   player_02:
     image: ${TEAM_IMAGE}
     command:  -team=${TEAM_PLACE} -number=2 -wshost=game_server
+    restart: always
     networks:
       - team_02
     depends_on:
@@ -35,6 +37,7 @@ services:
   player_03:
     image: ${TEAM_IMAGE}
     command:  -team=${TEAM_PLACE} -number=3 -wshost=game_server
+    restart: always
     networks:
       - team_03
     depends_on:
@@ -42,6 +45,7 @@ services:
   player_04:
     image: ${TEAM_IMAGE}
     command:  -team=${TEAM_PLACE} -number=4 -wshost=game_server
+    restart: always
     networks:
       - team_04
     depends_on:
@@ -49,6 +53,7 @@ services:
   player_05:
     image: ${TEAM_IMAGE}
     command:  -team=${TEAM_PLACE} -number=5 -wshost=game_server
+    restart: always
     networks:
       - team_05
     depends_on:
@@ -56,6 +61,7 @@ services:
   player_06:
     image: ${TEAM_IMAGE}
     command:  -team=${TEAM_PLACE} -number=6 -wshost=game_server
+    restart: always
     networks:
       - team_06
     depends_on:
@@ -63,6 +69,7 @@ services:
   player_07:
     image: ${TEAM_IMAGE}
     command:  -team=${TEAM_PLACE} -number=7 -wshost=game_server
+    restart: always
     networks:
       - team_07
     depends_on:
@@ -70,6 +77,7 @@ services:
   player_08:
     image: ${TEAM_IMAGE}
     command:  -team=${TEAM_PLACE} -number=8 -wshost=game_server
+    restart: always
     networks:
       - team_08
     depends_on:
@@ -77,6 +85,7 @@ services:
   player_09:
     image: ${TEAM_IMAGE}
     command:  -team=${TEAM_PLACE} -number=9 -wshost=game_server
+    restart: always
     networks:
       - team_09
     depends_on:
@@ -84,6 +93,7 @@ services:
   player_10:
     image: ${TEAM_IMAGE}
     command:  -team=${TEAM_PLACE} -number=10 -wshost=game_server
+    restart: always
     networks:
       - team_10
     depends_on:
@@ -91,6 +101,7 @@ services:
   player_11:
     image: ${TEAM_IMAGE}
     command:  -team=${TEAM_PLACE} -number=11 -wshost=game_server
+    restart: always
     networks:
       - team_11
     depends_on:
