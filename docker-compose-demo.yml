@@ -1,7 +1,7 @@
 version: '3.4'
 services:
   game_server:
-    image: makeitplay/football:1.0.5
+    image: lugobots/server:v1.1
     command: play --dev-mode --timer-mode=wait
     networks:
       - home_01

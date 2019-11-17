@@ -1,9 +1,9 @@
 package strategy
 
 import (
-	"github.com/makeitplay/arena"
-	"github.com/makeitplay/arena/physics"
-	"github.com/makeitplay/arena/units"
+	"github.com/lugobots/arena"
+	"github.com/lugobots/arena/physics"
+	"github.com/lugobots/arena/units"
 	"math"
 )
 

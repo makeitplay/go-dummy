@@ -1,12 +1,12 @@
 package dummy
 
 import (
-	"github.com/makeitplay/arena"
-	"github.com/makeitplay/arena/orders"
-	"github.com/makeitplay/arena/physics"
-	"github.com/makeitplay/arena/units"
-	"github.com/makeitplay/client-player-go"
-	"github.com/makeitplay/the-dummies-go/strategy"
+	"github.com/lugobots/arena"
+	"github.com/lugobots/arena/orders"
+	"github.com/lugobots/arena/physics"
+	"github.com/lugobots/arena/units"
+	"github.com/lugobots/client-player-go"
+	"github.com/lugobots/the-dummies-go/strategy"
 	"math"
 )
 

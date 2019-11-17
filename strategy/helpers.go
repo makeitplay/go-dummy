@@ -3,10 +3,10 @@ package strategy
 import (
 	"errors"
 	"fmt"
-	"github.com/makeitplay/arena"
-	"github.com/makeitplay/arena/physics"
-	"github.com/makeitplay/arena/units"
-	"github.com/makeitplay/client-player-go"
+	"github.com/lugobots/arena"
+	"github.com/lugobots/arena/physics"
+	"github.com/lugobots/arena/units"
+	"github.com/lugobots/client-player-go"
 	"math"
 	"sort"
 )

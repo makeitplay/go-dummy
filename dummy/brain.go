@@ -2,10 +2,10 @@ package dummy
 
 import (
 	"fmt"
-	"github.com/makeitplay/arena"
-	"github.com/makeitplay/arena/orders"
-	"github.com/makeitplay/client-player-go"
-	"github.com/makeitplay/the-dummies-go/strategy"
+	"github.com/lugobots/arena"
+	"github.com/lugobots/arena/orders"
+	"github.com/lugobots/client-player-go"
+	"github.com/lugobots/the-dummies-go/strategy"
 	"github.com/sirupsen/logrus"
 )
 
