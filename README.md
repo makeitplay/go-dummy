@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/lugobots/the-dummies-go)](https://goreportcard.com/report/github.com/lugobots/the-dummies-go)
 
 The Dummies Go is a [Go](http://golang.org/) implementation of a player (bot) for [Lugo](https://lugobots.dev) game.
-This bot was made using the [Go Client Player](https://github.com/lugobots/client-player-go) for Go.
+This bot was made using the [Go Client Player](https://github.com/lugobots/client-player-go).
 
 As this name suggest, _The Dummies_ are not that smart, but they may play well enough to help you to test your bot.
 
@@ -16,7 +16,7 @@ As this name suggest, _The Dummies_ are not that smart, but they may play well e
 
 ### Usage 
 
-You have two ways to make The Dummies play, they are described below.
+You have two ways to make _The Dummies_ play, they are described below.
  
 #### Option A - Running them in containers (no Git Clone needed)
 
@@ -28,13 +28,13 @@ Start the set of containers:
 TEAM_IMAGE=lugobots/the-dummies-go TEAM_PLACE=away docker-compose up
 ```
 
-It will start them as **away** team (defined by the env variable `TEAM_PLACE`).
+That command will start the team as the **away** team (defined by the env variable `TEAM_PLACE`).
 Now you may start your bot to play against _The Dummies_ 
 
-#### Option B  (recommended for developing environment because the startup is a faster)
+#### Option B - Running the processes directly on your machine (recommended for developing environment because the startup is a faster)
 
-If you are working in your bot, and you would like to play against The Dummies several times to test your bot, I recommend
-you having a copy of The Dummies in you machine, so it will startup faster than running them as container. 
+If you are working in your bot, and you want to play against _The Dummies_ several times to test your bot, so I recommend
+you having a copy of _The Dummies_ in you machine because the bots will startup faster than running them as containers. 
 
 1. Clone the repository to your machine
 2. Start the game server
@@ -42,9 +42,9 @@ you having a copy of The Dummies in you machine, so it will startup faster than 
    docker run -p 8080:8080  lugobots/server:v1.1 play --dev-mode
    ```
 
-, and then, you may execute the script `./play.sh [home|away]` in that directory when you want to start the team.
+and then, you may execute the script `./play.sh [home|away]` in that directory when you want to start the team.
 
-### The Dummies vs The Dummies
+### _The Dummies_ vs The Dummies
 
 If you have no other team to play against _The Dummies_ or if you are just curious to watch a Lugo match,
 you may start a game using _The Dummies_ as the Home and Away teams.
