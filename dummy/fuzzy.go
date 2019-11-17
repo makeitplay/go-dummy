@@ -1,6 +1,6 @@
 package dummy
 
-import "github.com/makeitplay/arena/units"
+import "github.com/lugobots/arena/units"
 
 type FuzzyScale int
 

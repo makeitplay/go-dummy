@@ -1,7 +1,7 @@
 package dummy
 
 import (
-	"github.com/makeitplay/arena/orders"
+	"github.com/lugobots/arena/orders"
 )
 
 func (d *Dummy) orderForDefending() (msg string, ordersSet []orders.Order) {

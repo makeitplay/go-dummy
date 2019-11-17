@@ -1,10 +1,10 @@
 # MakeItPlay - The Dummies Go
 
-[![GoDoc](https://godoc.org/github.com/makeitplay/the-dummies-go?status.svg)](https://godoc.org/github.com/makeitplay/the-dummies-go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/makeitplay/the-dummies-go)](https://goreportcard.com/report/github.com/makeitplay/the-dummies-go)
+[![GoDoc](https://godoc.org/github.com/lugobots/the-dummies-go?status.svg)](https://godoc.org/github.com/lugobots/the-dummies-go)
+[![Go Report Card](https://goreportcard.com/badge/github.com/lugobots/the-dummies-go)](https://goreportcard.com/report/github.com/lugobots/the-dummies-go)
 
 The Dummies Go is a [Go](http://golang.org/) implementation of a player (bot) for [MakeItPlay football](http://www.makeitplay.ai/football) game.
-This bot was made using the [Client Player](https://github.com/makeitplay/client-player-go) for Go.
+This bot was made using the [Client Player](https://github.com/lugobots/client-player-go) for Go.
 
 As this name suggest, **The Dummies** are not that smart, but they may play well enough to help you to test your bot.
 
@@ -49,7 +49,7 @@ you having a copy of The Dummies in you machine, so it will startup faster than 
 
 First, clone the project using the command:
 ```bash
-go get github.com/makeitplay/the-dummies-go
+go get github.com/lugobots/the-dummies-go
 ```
 
 Then, you may execute the script `play.sh [home|away]` in that directory always you want to start the team.

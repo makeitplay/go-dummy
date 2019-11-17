@@ -1,7 +1,7 @@
 package strategy
 
 import (
-	"github.com/makeitplay/arena"
+	"github.com/lugobots/arena"
 	"strconv"
 )
 

@@ -1,8 +1,8 @@
 package dummy
 
 import (
-	"github.com/makeitplay/arena/orders"
-	"github.com/makeitplay/the-dummies-go/strategy"
+	"github.com/lugobots/arena/orders"
+	"github.com/lugobots/the-dummies-go/strategy"
 )
 
 func (d *Dummy) orderForDisputingTheBall() (msg string, ordersSet []orders.Order) {

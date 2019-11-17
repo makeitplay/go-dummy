@@ -1,9 +1,9 @@
 package dummy
 
 import (
-	"github.com/makeitplay/arena/physics"
-	"github.com/makeitplay/client-player-go"
-	"github.com/makeitplay/the-dummies-go/strategy"
+	"github.com/lugobots/arena/physics"
+	"github.com/lugobots/client-player-go"
+	"github.com/lugobots/the-dummies-go/strategy"
 )
 
 // GetActiveRegion finds the region when the player should be on this team state
