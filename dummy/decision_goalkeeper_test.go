@@ -37,8 +37,6 @@ func TestMain(m *testing.M) {
 		}()
 	} else {
 		logrus.Warn("You must have a game server running to run the integration.")
-		logrus.Warn("Use the follow command to allow integration tests:")
-		logrus.Warn("docker run -it -p 8080:8080 makeitplay/football:1.0.5 play --dev-mode --timer-mode=remote")
 	}
 	// call flag.Parse() here if TestMain uses flags
 	os.Exit(m.Run())
