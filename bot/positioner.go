@@ -9,23 +9,33 @@ import (
 )
 
 const (
+	// Define the min number of cols allowed on the field division by the positioner
 	MinCols uint8 = 4
+	// Define the min number of rows allowed on the field division by the positioner
 	MinRows uint8 = 2
+	// Define the max number of cols allowed on the field division by the positioner
 	MaxCols uint8 = 20
+	// Define the max number of rows allowed on the field division by the positioner
 	MaxRows uint8 = 10
 )
 
+// Error helps to define internal errors
 type Error string
 
 func (e Error) Error() string { return string(e) }
 
 const (
+	// ErrMinCols defines an error for invalid number of cols
 	ErrMinCols = Error("number of cols lower the minimum")
+	// ErrMaxCols defines an error for invalid number of cols
 	ErrMaxCols = Error("number of cols higher the maximum")
+	// ErrMinRows defines an error for invalid number of rows
 	ErrMinRows = Error("number of rows lower the minimum")
+	// ErrMaxRows defines an error for invalid number of rows
 	ErrMaxRows = Error("number of rows higher the maximum")
 )
 
+// NewPositioner creates a new Positioner that will map the field to provide Regions
 func NewPositioner(cols, rows uint8, sideRef proto.Team_Side) (coach.Positioner, error) {
 	if cols < MinCols {
 		return nil, ErrMinCols
