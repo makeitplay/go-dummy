@@ -20,22 +20,26 @@ type Bot struct {
 func NewBot(config lugo4go.Config, logger lugo4go.Logger) (*Bot, error) {
 	var err error
 	b := Bot{}
-
+	b.log = logger
 	b.Positioner, err = coach.NewPositioner(RegionCols, RegionRows, config.TeamSide)
 	if err != nil {
 		return nil, fmt.Errorf("could not create a positioner: %s", err)
 	}
 
-	reg, err := b.Positioner.GetRegion(b.regionMap[Neutral].Col, b.regionMap[Neutral].Col)
-	if err != nil {
-		return nil, fmt.Errorf("did not connected to the gRPC server at '%s': %s", config.GRPCAddress, err)
+	if config.Number != field.GoalkeeperNumber {
+		b.regionMap = DefineRegionMap(config)
+		reg, err := b.Positioner.GetRegion(b.regionMap[Initial].Col, b.regionMap[Initial].Row)
+		logger.Infof("My position: %d, %v (%v)", config.Number, reg, b.regionMap)
+		if err != nil {
+			return nil, fmt.Errorf("did not connected to the gRPC server at '%s': %s", config.GRPCAddress, err)
+		}
+
+		b.InitialPosition = reg.Center()
+		b.Role = DefineRole(config.Number)
+
+	} else {
+		b.InitialPosition = field.GetTeamsGoal(config.TeamSide).Center
 	}
-
-	b.InitialPosition = reg.Center()
-	b.log = logger
-	b.Role = DefineRole(config)
-	b.regionMap = DefineRegionMap(config)
-
 	return &b, nil
 }
 
