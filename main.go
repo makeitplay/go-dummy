@@ -1,70 +1,49 @@
 package main
 
 import (
-	"math/rand"
-	"time"
-
-	"github.com/lugobots/arena"
-	"github.com/lugobots/client-player-go"
-	"github.com/lugobots/the-dummies-go/dummy"
-	"github.com/lugobots/the-dummies-go/strategy"
-	"github.com/sirupsen/logrus"
+	"github.com/lugobots/lugo4go/v2"
+	"github.com/lugobots/lugo4go/v2/coach"
+	"github.com/lugobots/the-dummies-go/v2/bot"
 	"log"
 	"os"
 	"os/signal"
 )
 
 func main() {
-	rand.Seed(time.Now().Unix())
-	serverConfig := new(client.Configuration)
-	serverConfig.ParseFromFlags()
-	serverConfig.LogLevel = logrus.DebugLevel
-
-	gamer := &client.Gamer{}
-
-	dummy.PlayerNumber = serverConfig.PlayerNumber
-	dummy.TeamPlace = serverConfig.TeamPlace
-	dummy.MyRule = strategy.DefinePlayerRule(serverConfig.PlayerNumber)
-	dummy.TeamBallPossession = dummy.TeamPlace
-	dummy.ClientResponder = gamer
-
-	gamer.OnAnnouncement = reactToNewState
-
-	gamerCtx, err := gamer.Play(dummy.GetInitialRegion().Center(serverConfig.TeamPlace), serverConfig)
+	var err error
+	// DefaultBundle is a shot cut for stuff that usually we define in init functions
+	config, logger, err := lugo4go.DefaultBundle()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("could not init default config or logger: %s", err)
 	}
 
+	// Creating a bot to play
+	myBot, err := bot.NewBot(config, logger)
+	if err != nil {
+		logger.Fatalf("did not connected to the gRPC server at '%s': %s", config.GRPCAddress, err)
+	}
+
+	config.InitialPosition = myBot.InitialPosition
+
+	// open the connection to the server
+	ctx, client, err := lugo4go.NewClient(config)
+	if err != nil {
+		logger.Fatalf("did not connected to the gRPC server at '%s': %s", config.GRPCAddress, err)
+	}
+	// defining the bot as the "decider" interface to be used by the Turn Handler
+	client.OnNewTurn(coach.DefaultTurnHandler(myBot, config, logger), logger)
+
+	// keep the process alive
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 	select {
 	case <-signalChan:
-		logrus.Print("*********** INTERRUPTION SIGNAL ****************")
-		gamer.StopToPlay(true)
-	case <-gamerCtx.Done():
-		logrus.Print("*********** Game stopped ****************")
-	}
-
-}
-
-func reactToNewState(ctx client.TurnContext) {
-
-	switch ctx.GameMsg().GameInfo.State {
-	case arena.Listening:
-		if ctx.GameMsg().Ball().Holder != nil {
-			dummy.TeamBallPossession = ctx.GameMsg().Ball().Holder.TeamPlace
+		logger.Warnf("got interruption signal")
+		if err := client.Stop(); err != nil {
+			logger.Errorf("error stopping the player client: %s", err)
 		}
-
-		player := &dummy.Dummy{
-			GameMsg:     ctx.GameMsg(),
-			Player:      ctx.Player(),
-			PlayerState: strategy.DetermineMyState(ctx),
-			TeamState:   strategy.DetermineMyTeamState(ctx, dummy.TeamBallPossession),
-			Logger:      ctx.Logger(),
-		}
-
-		ctx.Logger().Infof("my state: %s", player.PlayerState)
-		player.React()
-		dummy.LastHolderFrom = ctx.GameMsg().Ball().Holder
+	case <-ctx.Done():
+		logger.Infof("player client stopped")
 	}
+	logger.Infof("process finished")
 }
