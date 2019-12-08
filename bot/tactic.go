@@ -7,12 +7,16 @@ import (
 )
 
 func DefineRole(number uint32) Role {
-	if number <= 5 { // only 4 players: 2, 3, 4, and 5.
+	// starting from 2 because the number goalkeeper has no role
+	switch number {
+	case 2, 3, 4, 5:
 		return Defense
-	} else if number <= 9 { // also 4 players: 6, 7, 8, and 9
+	case 6, 7, 8, 9:
 		return Middle
+	case 10, 11:
+		return Attack
 	}
-	return Attack // players 10 and 11
+	return ""
 }
 
 func DetermineTeamState(me *proto.Player, ballRegion coach.Region, possession proto.Team_Side) (s TeamState, e error) {
