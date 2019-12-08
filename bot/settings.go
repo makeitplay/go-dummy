@@ -1,5 +1,25 @@
 package bot
 
+import (
+	"github.com/lugobots/lugo4go/v2"
+	"github.com/lugobots/lugo4go/v2/field"
+)
+
+// IMPORTANT: all this constant sets below may be changed (see each set instructions). However, any change will
+// affect the tactic defined in tactic.go file. So you must go there and adapt your tactics to your new settings.
+
+type TeamState string
+
+type Role string
+
+// Do not remove, rename, or add constants here.
+// You however, may increase or decrease their values to change the precision of the Positioner.
+// These values defines how the field will be divided by the Positioner to create a field map.
+const (
+	RegionCols = 8
+	RegionRows = 4
+)
+
 const (
 	Initial       TeamState = "initial"
 	UnderPressure TeamState = "under-pressure"
@@ -9,103 +29,23 @@ const (
 	OnAttack      TeamState = "on-attack"
 )
 const (
-	RegionCols = 8
-	RegionRows = 4
-)
-const (
 	Defense Role = "defense"
 	Middle  Role = "middle"
 	Attack  Role = "attack"
 )
 
-func DefineRole(number uint32) Role {
-	if number < 6 {
-		return Defense
-	} else if number < 10 {
-		return Middle
-	}
-	return Attack
+const (
+	DistanceNear = field.FieldWidth / 8
+	DistanceFar  = DistanceNear * 3
+)
+
+type RegionCode struct {
+	Col uint8
+	Row uint8
 }
 
-var roleMap = map[uint32]RegionMap{
-	2: {
-		Initial:       {1, 0},
-		UnderPressure: {2, 3},
-		Defensive:     {2, 3},
-		Neutral:       {2, 3},
-		Offensive:     {2, 3},
-		OnAttack:      {2, 3},
-	},
-	3: {
-		Initial:       {1, 1},
-		UnderPressure: {2, 3},
-		Defensive:     {2, 3},
-		Neutral:       {2, 3},
-		Offensive:     {2, 3},
-		OnAttack:      {2, 3},
-	},
-	4: {
-		Initial:       {1, 2},
-		UnderPressure: {2, 3},
-		Defensive:     {2, 3},
-		Neutral:       {2, 3},
-		Offensive:     {2, 3},
-		OnAttack:      {2, 3},
-	},
-	5: {
-		Initial:       {1, 3},
-		UnderPressure: {2, 3},
-		Defensive:     {2, 3},
-		Neutral:       {2, 3},
-		Offensive:     {2, 3},
-		OnAttack:      {2, 3},
-	},
-	6: {
-		Initial:       {2, 0},
-		UnderPressure: {2, 3},
-		Defensive:     {2, 3},
-		Neutral:       {2, 3},
-		Offensive:     {2, 3},
-		OnAttack:      {2, 3},
-	},
-	7: {
-		Initial:       {2, 1},
-		UnderPressure: {2, 3},
-		Defensive:     {2, 3},
-		Neutral:       {2, 3},
-		Offensive:     {2, 3},
-		OnAttack:      {2, 3},
-	},
-	8: {
-		Initial:       {2, 2},
-		UnderPressure: {2, 3},
-		Defensive:     {2, 3},
-		Neutral:       {2, 3},
-		Offensive:     {2, 3},
-		OnAttack:      {2, 3},
-	},
-	9: {
-		Initial:       {2, 3},
-		UnderPressure: {2, 3},
-		Defensive:     {2, 3},
-		Neutral:       {2, 3},
-		Offensive:     {2, 3},
-		OnAttack:      {2, 3},
-	},
-	10: {
-		Initial:       {3, 1},
-		UnderPressure: {2, 3},
-		Defensive:     {2, 3},
-		Neutral:       {2, 3},
-		Offensive:     {2, 3},
-		OnAttack:      {2, 3},
-	},
-	11: {
-		Initial:       {3, 2},
-		UnderPressure: {2, 3},
-		Defensive:     {2, 3},
-		Neutral:       {2, 3},
-		Offensive:     {2, 3},
-		OnAttack:      {2, 3},
-	},
+type RegionMap map[TeamState]RegionCode
+
+func DefineRegionMap(config lugo4go.Config) RegionMap {
+	return roleMap[config.Number]
 }
