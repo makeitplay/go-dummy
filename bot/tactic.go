@@ -19,9 +19,9 @@ func DefineRole(number uint32) Role {
 	return ""
 }
 
-func DetermineTeamState(me *proto.Player, ballRegion coach.Region, possession proto.Team_Side) (s TeamState, e error) {
+func DetermineTeamState(ballRegion coach.Region, teamSide, possession proto.Team_Side) (s TeamState, e error) {
 	regionCol := ballRegion.Col()
-	if possession == me.TeamSide {
+	if possession == teamSide {
 		switch regionCol {
 		case 6, 7:
 			return OnAttack, nil
@@ -53,6 +53,7 @@ func DetermineTeamState(me *proto.Player, ballRegion coach.Region, possession pr
 }
 
 var roleMap = map[uint32]RegionMap{
+	// starting from 2 because the number goalkeeper has RegionMap
 	2: {
 		Initial:       {1, 0},
 		UnderPressure: {2, 3},

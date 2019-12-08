@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"github.com/lugobots/lugo4go/v2"
 	"github.com/lugobots/lugo4go/v2/field"
 )
 
@@ -46,6 +45,6 @@ type RegionCode struct {
 
 type RegionMap map[TeamState]RegionCode
 
-func DefineRegionMap(config lugo4go.Config) RegionMap {
-	return roleMap[config.Number]
+func DefineRegionMap(number uint32) RegionMap {
+	return roleMap[number]
 }
