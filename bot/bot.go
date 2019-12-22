@@ -7,6 +7,7 @@ import (
 	"github.com/lugobots/lugo4go/v2/coach"
 	"github.com/lugobots/lugo4go/v2/field"
 	"github.com/lugobots/lugo4go/v2/proto"
+	"math/rand"
 )
 
 type Bot struct {
@@ -15,19 +16,22 @@ type Bot struct {
 	regionMap       RegionMap
 	InitialPosition proto.Point
 	log             lugo4go.Logger
+	// UNSAFE
+	BallPossessionTeam proto.Team_Side
 }
 
 func NewBot(config lugo4go.Config, logger lugo4go.Logger) (*Bot, error) {
 	var err error
 	b := Bot{}
 	b.log = logger
+	b.BallPossessionTeam = field.GetOpponentSide(config.TeamSide)
 	b.Positioner, err = coach.NewPositioner(RegionCols, RegionRows, config.TeamSide)
 	if err != nil {
 		return nil, fmt.Errorf("could not create a positioner: %s", err)
 	}
 
 	if config.Number != field.GoalkeeperNumber {
-		b.regionMap = DefineRegionMap(config)
+		b.regionMap = DefineRegionMap(config.Number)
 		reg, err := b.Positioner.GetRegion(b.regionMap[Initial].Col, b.regionMap[Initial].Row)
 		logger.Infof("My position: %d, %v (%v)", config.Number, reg, b.regionMap)
 		if err != nil {
@@ -43,19 +47,18 @@ func NewBot(config lugo4go.Config, logger lugo4go.Logger) (*Bot, error) {
 	return &b, nil
 }
 
-func (b Bot) OnDisputing(ctx context.Context, data coach.TurnData) error {
-	return myDecider(ctx, data)
-}
-
 func (b Bot) OnDefending(ctx context.Context, data coach.TurnData) error {
+	b.BallPossessionTeam = field.GetOpponentSide(data.Me.TeamSide)
 	return myDecider(ctx, data)
 }
 
 func (b Bot) OnHolding(ctx context.Context, data coach.TurnData) error {
+	b.BallPossessionTeam = data.Me.TeamSide
 	return myDecider(ctx, data)
 }
 
 func (b Bot) OnSupporting(ctx context.Context, data coach.TurnData) error {
+	b.BallPossessionTeam = data.Me.TeamSide
 	return myDecider(ctx, data)
 }
 
