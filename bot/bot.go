@@ -57,24 +57,34 @@ func (b Bot) OnHolding(ctx context.Context, data coach.TurnData) error {
 	return myDecider(ctx, data)
 }
 
-func (b Bot) OnSupporting(ctx context.Context, data coach.TurnData) error {
-	b.BallPossessionTeam = data.Me.TeamSide
-	return myDecider(ctx, data)
-}
-
 func (b Bot) AsGoalkeeper(ctx context.Context, data coach.TurnData) error {
 	return myDecider(ctx, data)
 }
 
 func myDecider(ctx context.Context, data coach.TurnData) error {
+	return nil
 	var orders []proto.PlayerOrder
 	// we are going to kick the ball as soon as we catch it
 	if field.IsBallHolder(data.Snapshot, data.Me) {
-		orderToKick, err := field.MakeOrderKick(*data.Snapshot.Ball, field.GetOpponentGoal(data.Me.TeamSide).Center, field.BallMaxSpeed)
+
+		playerNum := (rand.Uint32() % 10) + 1
+		if playerNum == 10 {
+			playerNum++
+		}
+		playerMate := field.GetPlayer(data.Snapshot, data.Me.TeamSide, playerNum)
+
+		dir := *playerMate.Position
+		orderToKick, err := field.MakeOrderKick(*data.Snapshot.Ball, dir, field.BallMaxSpeed)
 		if err != nil {
 			return fmt.Errorf("could not create kick order during turn %d: %s", data.Snapshot.Turn, err)
 		}
-		orders = []proto.PlayerOrder{orderToKick}
+
+		orderToMove, err := field.MakeOrderMove(*data.Me.Position, dir, 0)
+		if err != nil {
+			return fmt.Errorf("could not create move order during turn %d: %s", data.Snapshot.Turn, err)
+		}
+
+		orders = []proto.PlayerOrder{orderToMove, orderToKick}
 	} else if data.Me.Number == 10 {
 		// otherwise, let's run towards the ball like kids
 		orderToMove, err := field.MakeOrderMoveMaxSpeed(*data.Me.Position, *data.Snapshot.Ball.Position)
