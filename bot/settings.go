@@ -38,6 +38,16 @@ const (
 	Attack  Role = "attack"
 )
 
+type FuzzyScale int
+
+const (
+	MustNot FuzzyScale = iota
+	ShouldNot
+	May
+	Should
+	Must
+)
+
 const (
 	DistanceNear = field.FieldWidth / 8
 	DistanceFar  = DistanceNear * 3

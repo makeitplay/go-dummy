@@ -18,6 +18,8 @@ type Bot struct {
 	log             lugo4go.Logger
 	// UNSAFE
 	BallPossessionTeam proto.Team_Side
+	LastBallHolder     uint32
+	evaluator          evaluator
 }
 
 func NewBot(config lugo4go.Config, logger lugo4go.Logger) (*Bot, error) {
@@ -49,11 +51,7 @@ func NewBot(config lugo4go.Config, logger lugo4go.Logger) (*Bot, error) {
 
 func (b Bot) OnDefending(ctx context.Context, data coach.TurnData) error {
 	b.BallPossessionTeam = field.GetOpponentSide(data.Me.TeamSide)
-	return myDecider(ctx, data)
-}
-
-func (b Bot) OnHolding(ctx context.Context, data coach.TurnData) error {
-	b.BallPossessionTeam = data.Me.TeamSide
+	b.LastBallHolder = 0
 	return myDecider(ctx, data)
 }
 

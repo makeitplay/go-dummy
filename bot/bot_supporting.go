@@ -13,6 +13,7 @@ const supportersCount = 3
 
 func (b Bot) OnSupporting(ctx context.Context, turn coach.TurnData) error {
 	debugMsg := ""
+	b.LastBallHolder = turn.Snapshot.Ball.Holder.Number
 	supportPlayers := findClosestPlayers(turn.Snapshot.Ball.Holder, turn.Snapshot)
 	shouldSupport := false
 	for _, p := range supportPlayers {
@@ -50,7 +51,7 @@ func (b Bot) OnSupporting(ctx context.Context, turn coach.TurnData) error {
 
 	expectedRegion := GetMyRegion(teamState, b.Positioner, turn.Me.Number)
 
-	b.log.Debugf("C %s, Ex %s", currentReg, expectedRegion)
+	//b.log.Debugf("C %s, Ex %s", currentReg, expectedRegion)
 
 	var moveOrder *proto.Order_Move
 	var err error

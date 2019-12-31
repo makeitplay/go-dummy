@@ -11,6 +11,7 @@ import (
 
 func (b Bot) OnDisputing(ctx context.Context, turn coach.TurnData) (err error) {
 	debugMsg := ""
+	b.LastBallHolder = 0
 	orders := make([]proto.PlayerOrder, 0, 2)
 	var moveOrder proto.PlayerOrder
 
@@ -42,8 +43,6 @@ func (b Bot) OnDisputing(ctx context.Context, turn coach.TurnData) (err error) {
 		currentReg, _ := b.Positioner.GetPointRegion(*turn.Me.Position)
 
 		expectedRegion := GetMyRegion(teamState, b.Positioner, turn.Me.Number)
-
-		b.log.Debugf("C %s, Ex %s", currentReg, expectedRegion)
 
 		if currentReg.String() != expectedRegion.String() {
 			moveOrder, err = field.MakeOrderMoveMaxSpeed(*turn.Me.Position, expectedRegion.Center())
