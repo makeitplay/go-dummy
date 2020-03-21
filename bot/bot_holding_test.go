@@ -32,34 +32,34 @@ func TestCountCloseOpponents(t *testing.T) {
 	opponents := []*proto.Player{opponent}
 
 	// case: between them
-	assert.Equal(t, 1, isObstacleForPassing(me, *teamMate.Position, opponents))
+	assert.Equal(t, 1, countObstacles(me, *teamMate.Position, opponents))
 
 	// case: at same point as me
 	opponent.Position.X = fieldCenter.X
-	assert.Equal(t, 1, isObstacleForPassing(me, *teamMate.Position, opponents))
+	assert.Equal(t, 1, countObstacles(me, *teamMate.Position, opponents))
 
 	// case: at same point as the team mae
 	opponent.Position.X = teamMate.Position.X
 	opponent.Position.Y = teamMate.Position.Y
-	assert.Equal(t, 1, isObstacleForPassing(me, *teamMate.Position, opponents))
+	assert.Equal(t, 1, countObstacles(me, *teamMate.Position, opponents))
 
 	// case behind me
 	opponent.Position.X = me.Position.X - (field.BallSize * 3)
 	opponent.Position.Y = me.Position.Y
-	assert.Equal(t, 0, isObstacleForPassing(me, *teamMate.Position, opponents))
+	assert.Equal(t, 0, countObstacles(me, *teamMate.Position, opponents))
 
 	// case behind my team mate
 	opponent.Position.X = teamMate.Position.X + 10
 	opponent.Position.Y = teamMate.Position.Y
-	assert.Equal(t, 0, isObstacleForPassing(me, *teamMate.Position, opponents))
+	assert.Equal(t, 0, countObstacles(me, *teamMate.Position, opponents))
 
 	// case between us, in a little angle
 	opponent.Position.X = fieldCenter.X + 500
 	opponent.Position.Y = fieldCenter.Y + field.BallSize
-	assert.Equal(t, 1, isObstacleForPassing(me, *teamMate.Position, opponents))
+	assert.Equal(t, 1, countObstacles(me, *teamMate.Position, opponents))
 
 	// case between us, in a high angle
 	opponent.Position.X = fieldCenter.X + 500
 	opponent.Position.Y = fieldCenter.Y + field.BallSize*2
-	assert.Equal(t, 0, isObstacleForPassing(me, *teamMate.Position, opponents))
+	assert.Equal(t, 0, countObstacles(me, *teamMate.Position, opponents))
 }

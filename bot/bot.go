@@ -27,6 +27,7 @@ func NewBot(config lugo4go.Config, logger lugo4go.Logger) (*Bot, error) {
 	b := Bot{}
 	b.log = logger
 	b.BallPossessionTeam = field.GetOpponentSide(config.TeamSide)
+	b.evaluator = e{}
 	b.Positioner, err = coach.NewPositioner(RegionCols, RegionRows, config.TeamSide)
 	if err != nil {
 		return nil, fmt.Errorf("could not create a positioner: %s", err)

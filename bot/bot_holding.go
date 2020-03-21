@@ -11,14 +11,13 @@ import (
 	"sort"
 )
 
-
 func (b Bot) OnHolding(ctx context.Context, data coach.TurnData) error {
 	b.BallPossessionTeam = data.Me.TeamSide
 	b.LastBallHolder = 0
 
-	shootDecision := ShootingEvaluation(data.Me, data.Snapshot)
-	playerCandidates := GetPassingCandidates(data.Me, data.Snapshot, b.LastBallHolder)
-	passingDecision := PassingEvaluation(data.Me, playerCandidates, data.Snapshot)
+	shootDecision := b.evaluator.ShootingEvaluation(data.Me, data.Snapshot)
+	playerCandidates := b.evaluator.GetPassingCandidates(data.Me, data.Snapshot, b.LastBallHolder)
+	passingDecision := b.evaluator.PassingEvaluation(data.Me, data.Snapshot, playerCandidates)
 
 	b.log.Debugf("Shoot: %d, passing: %d", shootDecision, passingDecision)
 	// @explain:
@@ -40,7 +39,7 @@ func (b Bot) OnHolding(ctx context.Context, data coach.TurnData) error {
 	// @speed-buster: we should check if there is a player, and avoid panics. However, "passingDecision" would not
 	// be "positive" if there was not candidates.
 	playerTarget := playerCandidates[0]
-	if passingDecision >= Should {//|| (shootDecision == May && passingDecision == May && playerTarget.ShootingEvaluation > shootDecision) {
+	if passingDecision >= Should { //|| (shootDecision == May && passingDecision == May && playerTarget.ShootingEvaluation > shootDecision) {
 		kickOrder, err := field.MakeOrderKick(*data.Snapshot.Ball, *playerTarget.Player.Position, field.BallMaxSpeed)
 		if err != nil {
 			return fmt.Errorf("was not able to pass: %s", err)
@@ -60,10 +59,32 @@ type evaluator interface {
 	ShootingEvaluation(me *proto.Player, snapshot *proto.GameSnapshot) FuzzyScale
 	PassingEvaluation(me *proto.Player, snapshot *proto.GameSnapshot, candidates []PassingScore) FuzzyScale
 	GetPassingCandidates(me *proto.Player, snapshot *proto.GameSnapshot, lastHolder uint32) []PassingScore
-	IsObstacleForPassing(me *proto.Player, target proto.Point, opponents []*proto.Player) bool
+	CountObstacles(me *proto.Player, target proto.Point, opponents []*proto.Player) int
 	CountCloseOpponents(teamMate *proto.Player, opponents []*proto.Player) int
 }
 
+type e struct {
+}
+
+func (e e) ShootingEvaluation(me *proto.Player, snapshot *proto.GameSnapshot) FuzzyScale {
+	return ShootingEvaluation(me, snapshot)
+}
+
+func (e e) PassingEvaluation(me *proto.Player, snapshot *proto.GameSnapshot, candidates []PassingScore) FuzzyScale {
+	return PassingEvaluation(me, snapshot, candidates)
+}
+
+func (e e) GetPassingCandidates(me *proto.Player, snapshot *proto.GameSnapshot, lastHolder uint32) []PassingScore {
+	return GetPassingCandidates(e, me, snapshot, lastHolder)
+}
+
+func (e e) CountObstacles(me *proto.Player, target proto.Point, opponents []*proto.Player) int {
+	return countObstacles(me, target, opponents)
+}
+
+func (e e) CountCloseOpponents(teamMate *proto.Player, opponents []*proto.Player) int {
+	return countCloseOpponents(teamMate, opponents)
+}
 
 func ShootingEvaluation(me *proto.Player, snapshot *proto.GameSnapshot) FuzzyScale {
 	opponentSide := field.GetOpponentSide(me.TeamSide)
@@ -73,30 +94,28 @@ func ShootingEvaluation(me *proto.Player, snapshot *proto.GameSnapshot) FuzzySca
 		return MustNot
 	}
 
-	countObstacles := 0
-	kickDirection, _ := proto.NewVector(*snapshot.Ball.Position, goalCenter)
-	for _, p := range field.GetTeam(snapshot, opponentSide).Players {
-		if p.Number != field.GoalkeeperNumber {
-			angle := geo.AngleWithRoute(*kickDirection, goalCenter, *p.Position)
-			if angle < 20 {
-				countObstacles++
-				if countObstacles > 1 {
-					return ShouldNot
-				}
-			}
-		}
+	if distanceToShoot >= DistanceNear*1.5 {
+		return ShouldNot
 	}
-	// not that far, we could take the risk
-	if distanceToShoot >= DistanceNear {
+	// should not count the goal keeper
+	obstacles := countObstacles(me, goalCenter, field.GetTeam(snapshot, opponentSide).Players)
+
+	if obstacles > 0 {
+		if distanceToShoot < DistanceNear {
+
+		}
+
+		//	DECIDIR ESSA MERDA DEPOIS
+
 		return May
-	} else if countObstacles == 1 { // close, but with obstacles
+	} else if obstacles == 0 { // close, but with obstacles
 		return Should
 	}
 	// no obstacles, and pretty close!
 	return Must
 }
 
-func PassingEvaluation(me *proto.Player, candidates []PassingScore, snapshot *proto.GameSnapshot) FuzzyScale {
+func PassingEvaluation(me *proto.Player, snapshot *proto.GameSnapshot, candidates []PassingScore) FuzzyScale {
 
 	// @explain:
 	// first, let's evaluate based on the risk of losing the ball possession
@@ -107,12 +126,11 @@ func PassingEvaluation(me *proto.Player, candidates []PassingScore, snapshot *pr
 	closestDistance := float64(field.FieldWidth)
 	goalTarget := field.GetOpponentGoal(me.TeamSide).Center
 	goalDirection, _ := proto.NewVector(*snapshot.Ball.Position, goalTarget)
+
 	for _, opponent := range field.GetTeam(snapshot, field.GetOpponentSide(me.TeamSide)).Players {
 		if opponent.Number != field.GoalkeeperNumber {
 			distance := opponent.Position.DistanceTo(*opponent.Position)
-
-			obstacles := isObstacleForPassing(me, goalTarget, opponents []*proto.Player)
-
+			angle := geo.AngleWithRoute(*goalDirection, *me.Position, *opponent.Position)
 			if distance < field.PlayerSize*1.5 || angle < AngleOpponentObstacle {
 				return Must
 			}
@@ -166,7 +184,7 @@ const LocationBonus = 2
 const AngleOpponentObstacle = 10
 const closeOpponentDistance = field.PlayerSize
 
-func GetPassingCandidates(me *proto.Player, snapshot *proto.GameSnapshot, lastHolder uint32) []PassingScore {
+func GetPassingCandidates(e evaluator, me *proto.Player, snapshot *proto.GameSnapshot, lastHolder uint32) []PassingScore {
 	candidates := []PassingScore{}
 
 	myDistanceToGoal := me.Position.DistanceTo(field.GetTeamsGoal(me.TeamSide).Center)
@@ -182,13 +200,13 @@ func GetPassingCandidates(me *proto.Player, snapshot *proto.GameSnapshot, lastHo
 			}
 
 			punctuation := 0
-			punctuation -= isObstacleForPassing(me, p, opponents) * ObstaclePenalty
-			punctuation -= countCloseOpponents(p, opponents) * CloseOpponentsPenalty
+			punctuation -= e.CountObstacles(me, *p.Position, opponents) * ObstaclePenalty
+			punctuation -= e.CountCloseOpponents(p, opponents) * CloseOpponentsPenalty
 			punctuation -= (int(distanceFromMe) / DistanceNear) * DistancePenalty
 			if p.Number == lastHolder {
 				punctuation -= LastHolderPenalty
 			}
-			goalEvaluation := ShootingEvaluation(p, snapshot)
+			goalEvaluation := e.ShootingEvaluation(p, snapshot)
 			if goalEvaluation > May {
 				punctuation += GoalChanceBonus
 			}
@@ -212,7 +230,7 @@ func GetPassingCandidates(me *proto.Player, snapshot *proto.GameSnapshot, lastHo
 	return candidates
 }
 
-func isObstacleForPassing(me *proto.Player, target proto.Point, opponents []*proto.Player) int {
+func countObstacles(me *proto.Player, target proto.Point, opponents []*proto.Player) int {
 	obstacles := 0
 	if passDirection, err := proto.NewVector(*me.Position, target); err == nil && passDirection != nil {
 		distanceToTeamMate := me.Position.DistanceTo(target)
@@ -221,7 +239,7 @@ func isObstacleForPassing(me *proto.Player, target proto.Point, opponents []*pro
 			if distanceToTeamMate >= distanceToOpponent {
 				angle := geo.AngleWithRoute(*passDirection, *me.Position, *opponent.Position)
 				obstacle := math.Sin(angle * math.Pi / 180)
-				if math.Abs(angle) < 90 && obstacle * distanceToOpponent < field.BallSize * 2 {
+				if math.Abs(angle) < 90 && obstacle*distanceToOpponent < field.BallSize*2 {
 					obstacles++
 				}
 			}
