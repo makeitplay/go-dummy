@@ -7,12 +7,59 @@ import (
 	"github.com/makeitplay/arena/units"
 	"github.com/makeitplay/client-player-go"
 	"github.com/makeitplay/the-dummies-go/strategy"
+	"math/rand"
+	"time"
 )
 
 func (d *Dummy) orderForSupporting() (msg string, orders []orders.Order) {
 	if d.ShouldIAssist() { // middle players will give support
+		if rand.Int()%100 < 1 {
+			question := client.TrainingQuestion{
+				Question:   "Where should I go?",
+				QuestionId: fmt.Sprintf("%s-%s", d.Player.Id, time.Now()),
+				PlayerId:   d.Player.ID(),
+				Alternatives: []string{
+					"front",
+					"right",
+					"left",
+					"back",
+					"stay",
+					"ignore",
+				},
+			}
+			if err := client.AskQuestion(question, *GameConfig); err == nil {
+				d.Logger.Warn("question sent")
+				TunnelMsg = make(chan client.GameMessage)
+				WaitingAnswer = true
+				ds, err := DS.SaveSample(d.GameMsg.GameInfo)
+				if err != nil {
+					d.Logger.Errorf("did not create the state: %s", err )
+				}
+				d.Logger.Warnf("Bora esperar! ")
+				var answer string
+				for WaitingAnswer {
+					select {
+					case debugMsg := <-TunnelMsg:
+						var ok bool
+						if answer, ok = debugMsg.Data[question.QuestionId].(string); ok {
+							d.Logger.Warnf("Got the answer! %s", answer)
+							d.Logger.Warnf("Recebeu")
+							WaitingAnswer = false
+						} else {
+							d.Logger.Warnf("Not yet")
+						}
+					}
+				}
+
+				if answer != "ignore" {
+					ds.Save(answer)
+				}
+			}
+		}
 		return d.orderForActiveSupport()
 	}
+
+
 	return d.orderForPassiveSupport()
 }
 
@@ -74,11 +121,13 @@ func (d *Dummy) orderForActiveSupport() (msg string, ordersSet []orders.Order) {
 		}
 	}
 
-	stopOrder := d.Player.CreateStopOrder(*d.Player.Velocity.Direction)
+
 	if target == nil {
-		return msg, []orders.Order{stopOrder}
+		advance, _ := d.Player.CreateMoveOrderMaxSpeed(d.Player.OpponentGoal().Center)
+		return msg, []orders.Order{advance}
 	}
 
+	stopOrder := d.Player.CreateStopOrder(*d.Player.Velocity.Direction)
 	finalPoint := target.TargetFrom(d.Player.Coords)
 	finalDistance := finalPoint.DistanceTo(d.Player.Coords)
 	if finalDistance < units.PlayerSize && len(obstacles) == 0 {
@@ -95,10 +144,17 @@ func (d *Dummy) orderForActiveSupport() (msg string, ordersSet []orders.Order) {
 
 func (d *Dummy) orderForPassiveSupport() (msg string, ordersSet []orders.Order) {
 	player := d.Player
-	var region strategy.RegionCode
-	region = d.GetActiveRegion()
 
-	target := region.Center(TeamPlace)
+	target := d.GetActiveRegionCenter()
+	if target.DistanceTo(d.GameMsg.Ball().Coords) > DistanceDistant {
+		d.Logger.Errorf("---- I AM TOOOO FAR")
+		pathToGoal, err := physics.NewVector(target, d.GameMsg.Ball().Coords)
+		if err == nil {
+			pathToGoal.SetLength(DistanceFar)
+			target = pathToGoal.TargetFrom(target)
+		}
+	}
+	//target = target.MiddlePointTo(d.GameMsg.Ball().Coords)
 	if player.Coords.DistanceTo(target) < units.PlayerMaxSpeed {
 		if player.Velocity.Speed > 0 {
 			stopOrder := d.Player.CreateStopOrder(*d.Player.Velocity.Direction)

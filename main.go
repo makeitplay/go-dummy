@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/makeitplay/arena/orders"
+	"github.com/makeitplay/the-dummies-go/coach"
 	"math/rand"
 	"time"
 
@@ -35,6 +36,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	dummy.DS = coach.NewImageBasedDataSever("supporting", dummy.TeamPlace)
 	gamer.OnMessage = func(msg client.GameMessage) {
 		go func() {
 			logrus.Warnf("SOME MSG MSG! %v (%v)", msg.Type, msg.Data)
@@ -73,6 +75,8 @@ func reactToNewState(ctx client.TurnContext) {
 		if ctx.GameMsg().Ball().Holder != nil {
 			dummy.TeamBallPossession = ctx.GameMsg().Ball().Holder.TeamPlace
 		}
+
+		ctx.Player().Velocity.Add()
 
 		player := &dummy.Dummy{
 			GameMsg:     ctx.GameMsg(),

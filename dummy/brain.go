@@ -35,12 +35,17 @@ func (d *Dummy) React() {
 		switch d.PlayerState {
 		case strategy.DisputingTheBall:
 			msg, ordersSet = d.orderForDisputingTheBall()
-			ordersSet = append(ordersSet, d.Player.CreateCatchOrder())
+			if !Passing {
+				ordersSet = append(ordersSet, d.Player.CreateCatchOrder())
+			}
 		case strategy.Supporting:
+			Passing = false
 			msg, ordersSet = d.orderForSupporting()
 		case strategy.HoldingTheBall:
+			Passing = false
 			msg, ordersSet = d.orderForHoldingTheBall()
 		case strategy.Defending:
+			Passing = false
 			msg, ordersSet = d.orderForDefending()
 			ordersSet = append(ordersSet, d.Player.CreateCatchOrder())
 		}

@@ -7,6 +7,7 @@ import (
 	"github.com/makeitplay/arena/physics"
 	"github.com/makeitplay/arena/units"
 	"github.com/makeitplay/client-player-go"
+	"github.com/makeitplay/the-dummies-go/coach"
 	"github.com/makeitplay/the-dummies-go/strategy"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"math"
@@ -21,7 +22,7 @@ var TunnelMsg chan client.GameMessage
 
 var LastSuggestion string
 var Passing bool
-
+var DS coach.DataSaver
 // Shoot/Pass		MustNot			shouldNot		may			Should			Must
 // MustNot			Advance			Advance			Advance		Pass			Pass
 // ShouldNot		Advance			Advance			Advance		Pass			Pass
@@ -31,7 +32,9 @@ var Passing bool
 func (d *Dummy) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) {
 	player := d.Player
 
-	if rand.Int()%100 < 5 {
+	ballPoint := d.GameMsg.Ball().Coords
+	ballDistanceGoal := ballPoint.DistanceTo(player.OpponentGoal().Center)
+	if false && rand.Int()%100 < 5 && ballDistanceGoal <= DistanceDistant {
 		question := client.TrainingQuestion{
 			Question:   "What should I do now?",
 			QuestionId: fmt.Sprintf("%s-%s", d.Player.Id, time.Now()),
@@ -40,6 +43,7 @@ func (d *Dummy) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) 
 				"pass",
 				"shoot",
 				"run",
+				"dribble",
 				"ignore",
 			},
 		}
@@ -47,6 +51,10 @@ func (d *Dummy) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) 
 			d.Logger.Warn("question sent")
 			TunnelMsg = make(chan client.GameMessage)
 			WaitingAnswer = true
+			ds, err := DS.SaveSample(d.GameMsg.GameInfo)
+			if err != nil {
+				d.Logger.Errorf("did not create the state: %s", err )
+			}
 			d.Logger.Warnf("Bora esperar! ")
 			var answer string
 			for WaitingAnswer {
@@ -77,19 +85,22 @@ func (d *Dummy) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) 
 				if len(candidatePlayers) > 0 {
 					bastCandidate := electBestCandidate(candidatePlayers, d.GameMsg)
 					order, _ := d.Player.CreateKickOrder(d.GameMsg.Ball(), bastCandidate.Coords, units.BallMaxSpeed)
+					ds.Save(answer)
 					return "Ok mestre! Passando", []orders.Order{order}
 				}
 				return "Sorry mestre, canot pass", []orders.Order{orderToAdvance}
 			case "shoot":
 				_, target := ShouldShoot(player, d.GameMsg)
 				if target == nil {
-					*target = player.OpponentGoal().Center
+					tg := player.OpponentGoal().Center
+					target = &tg
 				}
 				order, _ := d.Player.CreateKickOrder(d.GameMsg.Ball(), *target, units.BallMaxSpeed)
 				Passing = true
+				ds.Save(answer)
 				return "OK mestre shhoting hoot!", []orders.Order{order}
-			case "run":
-
+			case "run", "dribble":
+				ds.Save(answer)
 				return "Go go go, o mestre mandou", []orders.Order{orderToAdvance}
 			}
 
@@ -97,7 +108,13 @@ func (d *Dummy) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) 
 	}
 
 	shouldIShoot, target := ShouldShoot(player, d.GameMsg)
-	if shouldIShoot >= Should {
+	minCase := Should
+	goalPoint := d.Player.OpponentGoal().Center
+	if goalPoint.DistanceTo(d.GameMsg.Ball().Coords) < DistanceDistant {
+		minCase = May
+	}
+
+	if shouldIShoot >= minCase {
 		order, _ := d.Player.CreateKickOrder(d.GameMsg.Ball(), *target, units.BallMaxSpeed)
 		return "Shoot!", []orders.Order{order}
 	}
@@ -115,11 +132,13 @@ func (d *Dummy) orderForHoldingTheBall() (msg string, ordersSet []orders.Order) 
 	if err != nil {
 		return "something it wrong", []orders.Order{d.Player.CreateStopOrder(*player.Velocity.Direction)}
 	}
-	if shouldIPass >= Should {
+	if shouldIPass >= Should && len(candidatePlayers) > 0  {
 		bastCandidate := electBestCandidate(candidatePlayers, d.GameMsg)
 		order, _ := d.Player.CreateKickOrder(d.GameMsg.Ball(), bastCandidate.Coords, units.BallMaxSpeed)
+
+		turnTo, _ := d.Player.CreateMoveOrderMaxSpeed(bastCandidate.Coords)
 		Passing = true
-		return "Found a well positioned mate", []orders.Order{order}
+		return "Found a well positioned mate", []orders.Order{turnTo, order}
 	}
 
 	if shouldIShoot <= ShouldNot {
@@ -256,17 +275,24 @@ func passReceiverScore(player *client.Player, gameMsg *client.GameMessage) int {
 	distanceFromGoal := DistanceForShooting(gameMsg.Ball(), player.OpponentGoal())
 	nearOpponents := 0
 	gameMsg.ForEachPlayByTeam(player.GetOpponentPlace(), func(index int, opponent *client.Player) {
-		if opponent.Coords.DistanceTo(player.Coords) < DistanceBeside {
+
+		frontOfHim := (GameConfig.TeamPlace == arena.HomeTeam && opponent.Coords.PosX > player.Coords.PosX) ||
+			(GameConfig.TeamPlace == arena.AwayTeam && opponent.Coords.PosX < player.Coords.PosX)
+
+		if opponent.Coords.DistanceTo(player.Coords) < units.PlayerSize * 2 {
 			nearOpponents++
+			if frontOfHim {
+				nearOpponents++
+			}
 		}
 	})
 
 	total := 100
 
-	total -= int(distanceFromMe) / (units.PlayerSize * 2)
-	total -= int(distanceFromGoal) / (units.PlayerSize * 4)
+	total -= (int(distanceFromMe) / units.PlayerSize) * 2
+	total -= (int(distanceFromGoal) / units.PlayerSize) * 4
 	// change the calc to only penalise when the opponent it between the player and the goal.
-	total -= nearOpponents
+	total -= nearOpponents * 3
 
 	if LastHolderFrom != nil && LastHolderFrom.Id == player.Id {
 		//we probably received the ball from this guy, so let try do not send it to him
